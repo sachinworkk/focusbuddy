@@ -89,6 +89,7 @@ function createTaskItem(task) {
   item.appendChild(title);
   item.appendChild(project);
   item.addEventListener('click', () => {
+    window.focusbuddySounds.select();
     selectedTaskId = task.id === selectedTaskId ? null : task.id;
     renderTasks(currentTasks);
   });
@@ -239,6 +240,7 @@ async function initTimer() {
 }
 
 function renderSessionCompleted({ entry, ticktickSynced, ticktickError, focusSynced, focusError }) {
+  window.focusbuddySounds.celebrate();
   sessionStatusEl.hidden = false;
 
   const parts = ['Session logged.'];
@@ -253,6 +255,7 @@ function renderSessionCompleted({ entry, ticktickSynced, ticktickError, focusSyn
 }
 
 timerStartBtn.addEventListener('click', async () => {
+  window.focusbuddySounds.start();
   const minutes = Number(timerMinutesInput.value) || 25;
   const task = currentTasks.find((t) => t.id === selectedTaskId) || null;
   sessionStatusEl.hidden = true;
@@ -270,20 +273,24 @@ timerStartBtn.addEventListener('click', async () => {
 });
 
 timerPauseBtn.addEventListener('click', async () => {
+  window.focusbuddySounds.click();
   renderTimerState(await window.focusbuddy.timer.pause());
 });
 
 timerResumeBtn.addEventListener('click', async () => {
+  window.focusbuddySounds.click();
   renderTimerState(await window.focusbuddy.timer.resume());
 });
 
 timerResetBtn.addEventListener('click', async () => {
+  window.focusbuddySounds.click();
   sessionStatusEl.hidden = true;
   renderTimerState(await window.focusbuddy.timer.reset());
 });
 
 document.querySelectorAll('.mode-tab').forEach((tab) => {
   tab.addEventListener('click', () => {
+    window.focusbuddySounds.click();
     document.querySelectorAll('.mode-tab').forEach((t) => t.classList.remove('active'));
     tab.classList.add('active');
   });
