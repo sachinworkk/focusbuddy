@@ -19,11 +19,6 @@
     --fb-accent-strong: #91b0ff;
     --fb-accent-warm: #e8934a;
     --fb-warning: #e3a765;
-    --fb-dumpling-body: #ecd0aa;
-    --fb-dumpling-body-shade: #d1a878;
-    --fb-dumpling-plate: #2b2420;
-    --fb-dumpling-blush: #f0a0a0;
-    --fb-dumpling-ink: #4a3626;
     --fb-radius-lg: 16px;
     --fb-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --fb-font-mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
@@ -62,48 +57,16 @@
     animation: breathe 3s ease-in-out infinite;
   }
 
-  .avatar .plate { fill: var(--fb-dumpling-plate); }
-
-  .avatar .dome {
-    fill: var(--fb-dumpling-body);
-    stroke: var(--fb-dumpling-body-shade);
-    stroke-width: 1.5;
+  .avatar .mascot-celebrating {
+    display: none;
   }
 
-  .avatar .pleat {
-    fill: none;
-    stroke: var(--fb-dumpling-body-shade);
-    stroke-width: 1.3;
-    stroke-linecap: round;
-    opacity: 0.8;
+  .avatar.is-done .mascot-focused {
+    display: none;
   }
 
-  .avatar .blush {
-    fill: var(--fb-dumpling-blush);
-    opacity: 0.55;
-  }
-
-  .avatar .eye {
-    fill: var(--fb-dumpling-ink);
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: fb-blink 5.5s ease-in-out infinite;
-  }
-
-  .avatar .eye-right {
-    animation-delay: 0.12s;
-  }
-
-  .avatar .mouth {
-    fill: none;
-    stroke: var(--fb-dumpling-ink);
-    stroke-width: 2.2;
-    stroke-linecap: round;
-  }
-
-  @keyframes fb-blink {
-    0%, 94%, 100% { transform: scaleY(1); }
-    97% { transform: scaleY(0.15); }
+  .avatar.is-done .mascot-celebrating {
+    display: block;
   }
 
   h1 {
@@ -141,25 +104,52 @@
 </head>
 <body>
   <div class="card">
-    <div class="avatar" aria-hidden="true">
-      <svg viewBox="0 0 64 64" width="64" height="64">
-        <ellipse class="plate" cx="32" cy="47" rx="23" ry="6" />
-        <path
-          class="dome"
-          d="M9 42 C9 24 18 12 32 12 C46 12 55 24 55 42 C55 48 46 50 32 50 C18 50 9 48 9 42 Z"
-        />
-        <g class="pleats">
-          <path class="pleat" d="M32 12 Q26 19 21 26" />
-          <path class="pleat" d="M32 12 Q29 19 27 26" />
-          <path class="pleat" d="M32 12 Q32 19 32 26" />
-          <path class="pleat" d="M32 12 Q35 19 37 26" />
-          <path class="pleat" d="M32 12 Q38 19 43 26" />
+    <div class="avatar" id="avatar" aria-hidden="true">
+      <!-- Potted Pal mascot, kept in sync with src/renderer/mascot/*.svg —
+           see the KEEP IN SYNC note above the <style> block. -->
+      <svg class="mascot-focused" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+        <circle cx="64" cy="36" r="28" fill="#fef08a" opacity="0.3"/>
+        <ellipse cx="64" cy="112" rx="30" ry="5" fill="#1e293b" opacity="0.5"/>
+        <path d="M42 72 L46 106 C46 108 48 110 50 110 L78 110 C80 110 82 108 82 106 L86 72 Z" fill="#e06d53"/>
+        <rect x="38" y="66" width="52" height="8" rx="2" fill="#ee7d63"/>
+        <rect x="38" y="72" width="52" height="2" fill="#c85940"/>
+        <ellipse cx="64" cy="67" rx="22" ry="3" fill="#5c3a21"/>
+        <path d="M64 67 L64 36" fill="none" stroke="#22c55e" stroke-width="4.5" stroke-linecap="round"/>
+        <g id="petals">
+          <circle cx="64" cy="20" r="6" fill="#facc15"/>
+          <circle cx="74" cy="26" r="6" fill="#facc15"/>
+          <circle cx="74" cy="38" r="6" fill="#facc15"/>
+          <circle cx="64" cy="44" r="6" fill="#facc15"/>
+          <circle cx="54" cy="38" r="6" fill="#facc15"/>
+          <circle cx="54" cy="26" r="6" fill="#facc15"/>
         </g>
-        <ellipse class="blush" cx="20" cy="38" rx="3.6" ry="2.2" />
-        <ellipse class="blush" cx="44" cy="38" rx="3.6" ry="2.2" />
-        <circle class="eye eye-left" cx="24" cy="32" r="2.6" />
-        <circle class="eye eye-right" cx="40" cy="32" r="2.6" />
-        <path class="mouth" d="M25 41 q7 5 14 0" />
+        <circle cx="64" cy="32" r="9" fill="#ca8a04"/>
+        <path d="M64 52 C46 48 44 34 44 34 C44 34 58 36 64 48 Z" fill="#16a34a"/>
+        <path d="M64 52 C82 48 84 34 84 34 C84 34 70 36 64 48 Z" fill="#22c55e"/>
+        <circle cx="54" cy="88" r="6" fill="none" stroke="#2d3748" stroke-width="2"/>
+        <circle cx="74" cy="88" r="6" fill="none" stroke="#2d3748" stroke-width="2"/>
+        <line x1="60" y1="88" x2="68" y2="88" stroke="#2d3748" stroke-width="2"/>
+        <circle cx="54" cy="88" r="2" fill="#2d3748"/>
+        <circle cx="74" cy="88" r="2" fill="#2d3748"/>
+        <circle cx="64" cy="93" r="1.5" fill="#2d3748"/>
+      </svg>
+      <svg class="mascot-celebrating" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+        <polygon points="32,24 35,30 42,30 37,34 39,40 32,36 25,40 27,34 22,30 29,30" fill="#fbbf24"/>
+        <polygon points="96,20 98,25 104,25 99,28 101,33 96,30 91,33 93,28 88,25 94,25" fill="#f43f5e"/>
+        <circle cx="64" cy="10" r="3" fill="#38bdf8"/>
+        <ellipse cx="64" cy="114" rx="26" ry="4" fill="#1e293b" opacity="0.4"/>
+        <path d="M42 72 L46 106 C46 108 48 110 50 110 L78 110 C80 110 82 108 82 106 L86 72 Z" fill="#e06d53"/>
+        <rect x="38" y="66" width="52" height="8" rx="2" fill="#ee7d63"/>
+        <path d="M64 67 C60 52 68 40 64 28" fill="none" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="50" cy="30" r="7" fill="#ec4899"/>
+        <circle cx="50" cy="30" r="3" fill="#fef08a"/>
+        <circle cx="78" cy="26" r="8" fill="#a855f7"/>
+        <circle cx="78" cy="26" r="3.5" fill="#fef08a"/>
+        <ellipse cx="48" cy="86" rx="4" ry="3" fill="#f87171" opacity="0.5"/>
+        <ellipse cx="80" cy="86" rx="4" ry="3" fill="#f87171" opacity="0.5"/>
+        <path d="M50 82 L55 77 L60 82" fill="none" stroke="#2d3748" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M68 82 L73 77 L78 82" fill="none" stroke="#2d3748" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M60 88 Q64 96 68 88 Z" fill="#f43f5e" stroke="#2d3748" stroke-width="1.5"/>
       </svg>
     </div>
     <h1>I've got this one.</h1>
