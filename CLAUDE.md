@@ -62,6 +62,18 @@ Primary dev machine: Linux (Ubuntu). Must remain portable to macOS/Windows later
 - Cross-device sync — local, single-machine tool
 - Live2D/Rive avatar rigging — stretch goal only, not required for launch
 
+## Known limitations
+
+- **Hosts-file blocking can't defeat browser-cached PWA content.** Sites like
+  YouTube ship a service worker that caches feed/subscription data for offline
+  viewing — that's served straight from local cache with no network request,
+  so a `/etc/hosts` redirect has nothing to intercept. `config.js`'s
+  `KNOWN_ALIASES` (in `src/platform/hosts.js`) covers the API/CDN subdomains
+  needed to stop *live* browsing (search, fresh videos, new feed data) for
+  YouTube/Twitter/Reddit/Facebook/Instagram, but previously-cached content can
+  still surface until a browser extension-based blocker (navigation-layer,
+  not DNS-layer) is built as a v2 companion — planned but not started.
+
 ## Style / conventions
 
 - Keep the codebase small and readable over clever — this is a personal tool,

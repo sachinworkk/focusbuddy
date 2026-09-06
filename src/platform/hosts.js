@@ -6,6 +6,37 @@ const sudoPrompt = require('sudo-prompt');
 const MARKER = '# focusbuddy-block';
 const SUDO_PROMPT_OPTS = { name: 'FocusBuddy' };
 
+// Many sites are single-page apps that shard content across API/CDN
+// subdomains once the shell loads, so blocking only the bare domain lets a
+// user hit "offline" on first load but keep browsing via those other hosts.
+// This maps a configured domain to every host that needs blocking with it.
+const KNOWN_ALIASES = {
+  'youtube.com': [
+    'youtube.com', 'www.youtube.com', 'm.youtube.com',
+    'youtu.be', 'www.youtu.be',
+    'youtubei.googleapis.com', 'yt3.ggpht.com', 's.ytimg.com', 'i.ytimg.com',
+  ],
+  'twitter.com': ['twitter.com', 'www.twitter.com', 'api.twitter.com'],
+  'x.com': ['x.com', 'www.x.com', 'api.x.com'],
+  'reddit.com': ['reddit.com', 'www.reddit.com', 'oauth.reddit.com', 'gateway.reddit.com'],
+  'facebook.com': ['facebook.com', 'www.facebook.com', 'm.facebook.com', 'graph.facebook.com'],
+  'instagram.com': ['instagram.com', 'www.instagram.com', 'i.instagram.com'],
+};
+
+function expandDomains(domains) {
+  const expanded = new Set();
+  for (const domain of domains) {
+    const aliases = KNOWN_ALIASES[domain];
+    if (aliases) {
+      aliases.forEach((host) => expanded.add(host));
+    } else {
+      expanded.add(domain);
+      expanded.add(`www.${domain}`);
+    }
+  }
+  return [...expanded];
+}
+
 function getHostsFilePath() {
   // WINDOWS ONLY: hosts file lives under System32\drivers\etc instead of /etc
   if (process.platform === 'win32') {
@@ -19,12 +50,7 @@ function readHosts() {
 }
 
 function buildBlockedLines(domains) {
-  const lines = [];
-  for (const domain of domains) {
-    lines.push(`127.0.0.1 ${domain} ${MARKER}`);
-    lines.push(`127.0.0.1 www.${domain} ${MARKER}`);
-  }
-  return lines;
+  return expandDomains(domains).map((host) => `127.0.0.1 ${host} ${MARKER}`);
 }
 
 function withDomainsBlocked(hostsContent, domains) {
