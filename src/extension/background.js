@@ -3,18 +3,33 @@
 const STATUS_URL = 'http://127.0.0.1:47990/status';
 const ALARM_NAME = 'focusbuddy-sync';
 
+const BLOCKED_PAGE = chrome.runtime.getURL('blocked.html');
+
 function buildRules(domains) {
-  return domains.map((domain, index) => ({
-    id: index + 1,
-    priority: 1,
-    action: { type: 'block' },
-    condition: {
-      urlFilter: `||${domain}^`,
-      resourceTypes: [
-        'main_frame', 'sub_frame', 'xmlhttprequest', 'script', 'image', 'media', 'font', 'stylesheet',
-      ],
-    },
-  }));
+  const rules = [];
+  domains.forEach((domain, index) => {
+    // Top-level navigations get redirected to a friendly "still blocked" page...
+    rules.push({
+      id: index * 2 + 1,
+      priority: 1,
+      action: { type: 'redirect', redirect: { url: BLOCKED_PAGE } },
+      condition: {
+        urlFilter: `||${domain}^`,
+        resourceTypes: ['main_frame'],
+      },
+    });
+    // ...everything else (XHR, images, embedded frames, etc.) is just blocked outright.
+    rules.push({
+      id: index * 2 + 2,
+      priority: 1,
+      action: { type: 'block' },
+      condition: {
+        urlFilter: `||${domain}^`,
+        resourceTypes: ['sub_frame', 'xmlhttprequest', 'script', 'image', 'media', 'font', 'stylesheet'],
+      },
+    });
+  });
+  return rules;
 }
 
 async function clearRules() {

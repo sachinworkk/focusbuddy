@@ -15,15 +15,21 @@ function setActive(value) {
   active = !!value;
 }
 
-function start(port, getDomains) {
+function start(port, getDomains, getTimerState) {
   if (server) return;
 
   server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
 
     if (req.method === 'GET' && req.url === '/status') {
+      const timerState = active && getTimerState ? getTimerState() : null;
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ active, domains: active ? getDomains() : [] }));
+      res.end(JSON.stringify({
+        active,
+        domains: active ? getDomains() : [],
+        remainingSeconds: timerState ? timerState.remainingSeconds : null,
+        taskTitle: timerState?.task?.title || null,
+      }));
       return;
     }
 
