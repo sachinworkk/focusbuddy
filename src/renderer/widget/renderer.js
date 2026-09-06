@@ -41,3 +41,18 @@ window.addEventListener('mouseup', () => {
   }
   drag = null;
 });
+
+const progressRing = document.getElementById('progressRing');
+
+function updateTimerDisplay(state) {
+  const percent = state.durationSeconds > 0
+    ? Math.min(100, Math.round(((state.durationSeconds - state.remainingSeconds) / state.durationSeconds) * 100))
+    : 0;
+  progressRing.style.setProperty('--progress', percent);
+  avatar.classList.toggle('running', state.status === 'running');
+  avatar.classList.toggle('paused', state.status === 'paused');
+  avatar.classList.toggle('completed', state.status === 'completed');
+}
+
+window.focusbuddy.timer.getState().then(updateTimerDisplay);
+window.focusbuddy.timer.onState(updateTimerDisplay);

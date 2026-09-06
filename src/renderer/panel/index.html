@@ -12,17 +12,39 @@
 
     <section class="panel-section" id="timer-section">
       <h2>Timer</h2>
-      <p class="placeholder">Pomodoro timer coming soon.</p>
+      <div class="timer-task" id="timer-task">No task selected</div>
+      <div class="timer-display" id="timer-display">25:00</div>
+      <div class="timer-controls">
+        <label class="timer-duration-label">
+          Minutes
+          <input type="number" id="timer-minutes" min="1" max="180" />
+        </label>
+        <div class="timer-buttons">
+          <button id="timer-start-btn">Start</button>
+          <button id="timer-pause-btn" hidden>Pause</button>
+          <button id="timer-resume-btn" hidden>Resume</button>
+          <button id="timer-reset-btn" hidden>Reset</button>
+        </div>
+      </div>
     </section>
 
     <section class="panel-section" id="tasks-section">
-      <h2>Tasks</h2>
-      <p class="placeholder">TickTick task list coming soon.</p>
+      <div class="section-header">
+        <h2>Tasks</h2>
+        <button id="refresh-tasks-btn" class="link-btn" hidden>Refresh</button>
+      </div>
+      <p class="placeholder" id="tasks-status">Connect TickTick to see your tasks.</p>
+      <ul class="task-list" id="task-list" hidden></ul>
     </section>
 
     <section class="panel-section" id="settings-section">
       <h2>Settings</h2>
-      <p class="placeholder">Distraction blocking &amp; account settings coming soon.</p>
+      <div class="settings-row">
+        <span id="ticktick-status">Not connected to TickTick.</span>
+        <button id="ticktick-connect-btn">Connect TickTick</button>
+        <button id="ticktick-logout-btn" hidden>Disconnect</button>
+      </div>
+      <p class="placeholder">Distraction blocking coming soon.</p>
     </section>
 
     <script src="renderer.js"></script>
