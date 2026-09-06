@@ -12,11 +12,18 @@ session is running, without touching `/etc/hosts` or prompting for a password.
   browser/extension startup) and adds or clears `declarativeNetRequest` rules
   to match. Top-level page loads are redirected to a bundled `blocked.html`
   page ("this page is taking a break, wait for your Pomodoro to finish") that
-  polls `/status` itself and shows the live countdown/task; once the session
-  ends it stops polling and shows a "session's over" message instead of
-  reloading (reloading would just reload this same extension page, not the
-  originally-blocked site, which would loop forever). Non-navigation requests
-  (XHR, images, sub-frames, etc.) are just blocked outright.
+  polls `/status` for the current task name. There's no countdown on this
+  page anymore — its own poll and the alarm-driven sync run on different,
+  drifting cadences, so a synced timer would read as broken next to the
+  desktop widget's. Non-navigation requests (XHR, images, sub-frames, etc.)
+  are just blocked outright.
+- When a session starts, `background.js` also reloads any already-open tabs
+  sitting on a soon-to-be-blocked domain (dNR only intercepts *new*
+  navigations, so an already-loaded tab wouldn't otherwise notice). When a
+  session ends, it remembers the pre-redirect URL for each tab it sent to
+  `blocked.html` (via `chrome.webNavigation.onBeforeNavigate`, since that
+  fires before the dNR redirect) and navigates those tabs straight back,
+  instead of leaving the user stuck on the extension page.
 - The app is the only thing that can turn blocking on — the extension is
   read-only against `/status`.
 - `manifest.json` grants broad `http(s)://*/*` host permissions. This isn't

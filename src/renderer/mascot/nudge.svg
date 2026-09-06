@@ -18,10 +18,10 @@
   <path d="M50 42 C38 48 34 60 34 60 C34 60 46 56 52 46 Z" fill="#65a30d"/>
   <path d="M46 36 C40 26 28 28 28 28 C28 28 34 38 44 38 Z" fill="#84cc16"/>
 
-  <!-- Pot Face (Gentle Worried Eyes) -->
-  <circle cx="54" cy="88" r="2.5" fill="#2d3748"/>
-  <circle cx="74" cy="88" r="2.5" fill="#2d3748"/>
-  <circle cx="52" cy="86" r="1" fill="#ffffff"/>
-  <circle cx="72" cy="86" r="1" fill="#ffffff"/>
-  <path d="M60 94 Q64 91 68 94" fill="none" stroke="#2d3748" stroke-width="2" stroke-linecap="round"/>
+  <!-- Pot Face (Content, Just a Little Thirsty) -->
+  <circle cx="54" cy="88" r="2.3" fill="#2d3748"/>
+  <circle cx="53" cy="87" r="0.6" fill="#ffffff"/>
+  <circle cx="74" cy="88" r="2.3" fill="#2d3748"/>
+  <circle cx="73" cy="87" r="0.6" fill="#ffffff"/>
+  <path d="M60 93 Q64 94.5 68 93" fill="none" stroke="#2d3748" stroke-width="2" stroke-linecap="round"/>
 </svg>

@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('focusbuddy', {
     connect: () => ipcRenderer.invoke('ticktick:connect'),
     logout: () => ipcRenderer.invoke('ticktick:logout'),
     getTasks: () => ipcRenderer.invoke('ticktick:get-tasks'),
+    completeTask: (projectId, taskId) => ipcRenderer.invoke('ticktick:complete-task', { projectId, taskId }),
   },
   avatar: {
     setOverdueState: (overdue) => ipcRenderer.send('avatar:set-overdue-state', overdue),
