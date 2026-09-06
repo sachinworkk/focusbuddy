@@ -32,6 +32,11 @@ html, body {
   transition: transform var(--fb-dur-fast) var(--fb-ease);
 }
 
+.mascot-img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
 .sparkle {
   position: absolute;
   width: 6px;
