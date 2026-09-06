@@ -18,7 +18,10 @@ Primary dev machine: Linux (Ubuntu). Must remain portable to macOS/Windows later
 - Plain React or vanilla JS for the renderer — no heavy state library needed
 - electron-builder for packaging
 - electron's `safeStorage` API for storing TickTick OAuth tokens
-- `sudo-prompt` (or equivalent) for the one privilege-escalation need (hosts file edit)
+- Distraction blocking is a companion Chrome extension (`src/extension/`)
+  using `declarativeNetRequest`, not a hosts-file edit — see constraint 2 and
+  build order item 5. No privilege escalation dependency needed anymore
+  (`sudo-prompt` was removed 2026-09-06 along with `src/platform/hosts.js`).
 
 ## Hard constraints (do not violate these)
 
@@ -31,15 +34,28 @@ Primary dev machine: Linux (Ubuntu). Must remain portable to macOS/Windows later
    developer.ticktick.com/docs/openapi.md; an earlier version of this file
    incorrectly claimed no such endpoint existed and blocked it — build order
    item 4 was always the intended behavior).
-2. **Isolate all OS-specific logic in one module** (hosts file path, privilege
-   elevation method). Everything else must be platform-agnostic.
-   - Linux/macOS hosts path: `/etc/hosts`, elevate via sudo
-   - Windows hosts path: `C:\Windows\System32\drivers\etc\hosts`, elevate via UAC
-3. **Blocking must be reversible and scoped.** Every hosts-file line this app
-   adds must be tagged with a marker comment (e.g. `# focusbuddy-block`) and
-   only lines with that marker may ever be removed by the unblock routine.
+2. **Blocking is done by the FocusBuddy Chrome extension (`src/extension/`),
+   not a hosts-file edit** (changed 2026-09-06 — the hosts-file approach
+   required a sudo/UAC password prompt on every session start and couldn't
+   cleanly reverse itself; declarativeNetRequest needs neither). The Electron
+   app is the sole source of truth for block state: it runs a loopback-only
+   HTTP status server (`src/main/block-server.js`, port from
+   `config.js`'s `blocking.serverPort`) that the extension polls and mirrors
+   into its dynamic rules. The extension can only read that state, never set
+   it. This mechanism is inherently cross-platform (Chrome behaves the same
+   on Linux/macOS/Windows), so there is no OS-specific branch left to isolate
+   here — if a non-Chrome or non-extension blocking path is ever added later,
+   isolate *that* platform-specific logic in its own module the way
+   `src/platform/hosts.js` used to.
+3. **Blocking must be reversible and scoped.** The extension may only ever
+   hold `declarativeNetRequest` dynamic rules sourced from the block-server's
+   current domain list — never rules a user or another extension added, and
+   never anything written outside Chrome's own rule store (no hosts file, no
+   other persistent OS state).
 4. **No always-on background daemon for v1.** The app only acts when the user
-   opens it / starts a session — no silent polling or telemetry.
+   opens it / starts a session — no silent polling or telemetry. (The
+   extension's 30s poll of the local status server only runs while Chrome
+   itself is open, and only ever reads; it doesn't count as a new daemon.)
 
 ## Feature build order (do not skip ahead)
 
@@ -52,8 +68,10 @@ Primary dev machine: Linux (Ubuntu). Must remain portable to macOS/Windows later
 4. TickTick logging: on session completion, write a completed focus record
    (task, duration, start/end time) via TickTick's API. Success = small
    celebratory animation on the avatar.
-5. Optional distraction blocking: toggle at session start, hosts-file
-   append/remove per the constraints above.
+5. Optional distraction blocking: toggle at session start; the app flips its
+   local block-server state and the FocusBuddy Chrome extension
+   (`src/extension/`) picks it up and applies/clears its
+   `declarativeNetRequest` rules, per the constraints above.
 6. Avatar polish: swap placeholder for real sprite/Lottie animation, add
    mood states (idle / focused / celebrating / gentle nudge for overdue tasks).
 
@@ -67,15 +85,19 @@ Primary dev machine: Linux (Ubuntu). Must remain portable to macOS/Windows later
 
 ## Known limitations
 
-- **Hosts-file blocking can't defeat browser-cached PWA content.** Sites like
-  YouTube ship a service worker that caches feed/subscription data for offline
-  viewing — that's served straight from local cache with no network request,
-  so a `/etc/hosts` redirect has nothing to intercept. `config.js`'s
-  `KNOWN_ALIASES` (in `src/platform/hosts.js`) covers the API/CDN subdomains
+- **Even navigation-layer blocking can't defeat browser-cached PWA content.**
+  Sites like YouTube ship a service worker that caches feed/subscription data
+  for offline viewing — that's served straight from local cache with no
+  network request, so neither a hosts-file redirect nor the
+  `declarativeNetRequest` rules in `src/extension/` have anything to
+  intercept. `config.js`'s `blocking.domains`, expanded via
+  `src/main/blocklist.js`'s `KNOWN_ALIASES`, covers the API/CDN subdomains
   needed to stop *live* browsing (search, fresh videos, new feed data) for
   YouTube/Twitter/Reddit/Facebook/Instagram, but previously-cached content can
-  still surface until a browser extension-based blocker (navigation-layer,
-  not DNS-layer) is built as a v2 companion — planned but not started.
+  still surface. The extension (added 2026-09-06, replacing hosts-file
+  blocking) is the planned v2 companion mentioned in the older version of
+  this note — it's done, and this cache limitation is what's left over even
+  with it in place. It's also Chrome-only; other browsers get no blocking.
 
 ## Style / conventions
 

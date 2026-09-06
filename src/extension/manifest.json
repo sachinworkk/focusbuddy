@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "FocusBuddy Blocker",
+  "version": "1.0.0",
+  "description": "Blocks distracting sites in Chrome while a FocusBuddy Pomodoro session is running.",
+  "permissions": ["declarativeNetRequest", "alarms"],
+  "host_permissions": ["http://127.0.0.1:47990/*"],
+  "background": {
+    "service_worker": "background.js"
+  }
+}

@@ -23,5 +23,7 @@ module.exports = {
       .map((d) => d.trim())
       .filter(Boolean),
     enabledByDefault: process.env.FOCUSBUDDY_BLOCK_ENABLED_DEFAULT === 'true',
+    // Local-only status server the companion Chrome extension polls (src/extension/).
+    serverPort: Number(process.env.FOCUSBUDDY_BLOCK_SERVER_PORT || 47990),
   },
 };

@@ -9,8 +9,7 @@
     "build": "electron-builder --linux"
   },
   "dependencies": {
-    "dotenv": "^16.4.5",
-    "sudo-prompt": "^9.2.1"
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "electron": "^32.0.0",
