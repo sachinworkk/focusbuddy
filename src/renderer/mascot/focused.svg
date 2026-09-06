@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <!-- Soft Glow Ring -->
+  <circle cx="64" cy="36" r="28" fill="#fef08a" opacity="0.3"/>
+
+  <!-- Shadow -->
+  <ellipse cx="64" cy="112" rx="30" ry="5" fill="#1e293b" opacity="0.5"/>
+
+  <!-- Terracotta Pot -->
+  <path d="M42 72 L46 106 C46 108 48 110 50 110 L78 110 C80 110 82 108 82 106 L86 72 Z" fill="#e06d53"/>
+  <rect x="38" y="66" width="52" height="8" rx="2" fill="#ee7d63"/>
+  <rect x="38" y="72" width="52" height="2" fill="#c85940"/>
+  <!-- Soil -->
+  <ellipse cx="64" cy="67" rx="22" ry="3" fill="#5c3a21"/>
+
+  <!-- Perked Stem -->
+  <path d="M64 67 L64 36" fill="none" stroke="#22c55e" stroke-width="4.5" stroke-linecap="round"/>
+
+  <!-- Bloomed Golden Sun Flower Core -->
+  <g id="petals">
+    <circle cx="64" cy="20" r="6" fill="#facc15"/>
+    <circle cx="74" cy="26" r="6" fill="#facc15"/>
+    <circle cx="74" cy="38" r="6" fill="#facc15"/>
+    <circle cx="64" cy="44" r="6" fill="#facc15"/>
+    <circle cx="54" cy="38" r="6" fill="#facc15"/>
+    <circle cx="54" cy="26" r="6" fill="#facc15"/>
+  </g>
+  <circle cx="64" cy="32" r="9" fill="#ca8a04"/>
+
+  <!-- Upright Leaves -->
+  <path d="M64 52 C46 48 44 34 44 34 C44 34 58 36 64 48 Z" fill="#16a34a"/>
+  <path d="M64 52 C82 48 84 34 84 34 C84 34 70 36 64 48 Z" fill="#22c55e"/>
+
+  <!-- Glasses on Pot -->
+  <circle cx="54" cy="88" r="6" fill="none" stroke="#2d3748" stroke-width="2"/>
+  <circle cx="74" cy="88" r="6" fill="none" stroke="#2d3748" stroke-width="2"/>
+  <line x1="60" y1="88" x2="68" y2="88" stroke="#2d3748" stroke-width="2"/>
+
+  <!-- Attentive Eyes (Inside Glasses) -->
+  <circle cx="54" cy="88" r="2" fill="#2d3748"/>
+  <circle cx="74" cy="88" r="2" fill="#2d3748"/>
+
+  <!-- Small Focused Mouth -->
+  <circle cx="64" cy="93" r="1.5" fill="#2d3748"/>
+</svg>

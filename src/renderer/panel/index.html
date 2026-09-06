@@ -3,62 +3,85 @@
   <head>
     <meta charset="utf-8" />
     <title>FocusBuddy</title>
+    <link rel="stylesheet" href="../theme.css" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <header>
-      <h1>FocusBuddy</h1>
+    <header class="panel-header" id="panel-header">
+      <span class="panel-header-title">FocusBuddy</span>
+      <button class="panel-close-btn" id="panel-close-btn" aria-label="Close">✕</button>
     </header>
 
-    <section class="panel-section" id="timer-section">
-      <h2>Timer</h2>
-      <div class="timer-task" id="timer-task">No task selected</div>
-      <div class="timer-display" id="timer-display">25:00</div>
-      <div class="timer-controls">
-        <label class="timer-duration-label">
-          Minutes
-          <input type="number" id="timer-minutes" min="1" max="180" />
-        </label>
-        <label class="timer-checkbox-label">
-          <input type="checkbox" id="mark-complete-checkbox" />
-          Mark task complete in TickTick when done
-        </label>
-        <label class="timer-checkbox-label">
-          <input type="checkbox" id="block-sites-checkbox" />
-          Block distracting sites during this session
-        </label>
-        <div class="timer-buttons">
-          <button id="timer-start-btn">Start</button>
-          <button id="timer-pause-btn" hidden>Pause</button>
-          <button id="timer-resume-btn" hidden>Resume</button>
-          <button id="timer-reset-btn" hidden>Reset</button>
+    <main class="panel-body">
+      <section class="mascot-stage">
+        <span class="level-badge">LVL 1 • Simple Pleat</span>
+        <div class="mascot-sprite-wrap">
+          <div class="avatar-shape" id="panel-avatar" data-mood="idle">
+            <img class="mascot-img mascot-idle" src="../mascot/idle.svg" alt="" />
+            <img class="mascot-img mascot-focused" src="../mascot/focused.svg" alt="" />
+            <img class="mascot-img mascot-paused" src="../mascot/idle.svg" alt="" />
+            <img class="mascot-img mascot-celebrating" src="../mascot/celebrating.svg" alt="" />
+            <img class="mascot-img mascot-nudge" src="../mascot/nudge.svg" alt="" />
+          </div>
         </div>
-        <p class="placeholder" id="session-status" hidden></p>
-      </div>
-    </section>
+        <div class="xp-bar"><div class="xp-bar-fill" style="width: 35%"></div></div>
+      </section>
 
-    <section class="panel-section" id="tasks-section">
-      <div class="section-header">
-        <h2>Tasks</h2>
-        <button id="refresh-tasks-btn" class="link-btn" hidden>Refresh</button>
-      </div>
-      <p class="placeholder" id="tasks-status">Connect TickTick to see your tasks.</p>
-      <ul class="task-list" id="task-list" hidden></ul>
-    </section>
+      <section class="panel-section panel-card" id="timer-section">
+        <div class="mode-tabs" id="mode-tabs">
+          <button type="button" class="mode-tab active" data-mode="focus">Focus</button>
+          <button type="button" class="mode-tab" data-mode="short-break">Short Break</button>
+          <button type="button" class="mode-tab" data-mode="long-break">Long Break</button>
+        </div>
+        <div class="timer-task" id="timer-task">No task selected</div>
+        <div class="timer-display" id="timer-display">25:00</div>
+        <div class="timer-controls">
+          <label class="timer-duration-label">
+            Minutes
+            <input type="number" id="timer-minutes" min="1" max="180" />
+          </label>
+          <label class="timer-checkbox-label">
+            <input type="checkbox" id="mark-complete-checkbox" />
+            Mark task complete in TickTick when done
+          </label>
+          <label class="timer-checkbox-label">
+            <input type="checkbox" id="block-sites-checkbox" />
+            Block distracting sites during this session
+          </label>
+          <div class="timer-buttons">
+            <button id="timer-start-btn" class="btn btn-primary">Start</button>
+            <button id="timer-pause-btn" class="btn" hidden>Pause</button>
+            <button id="timer-resume-btn" class="btn btn-primary" hidden>Resume</button>
+            <button id="timer-reset-btn" class="btn" hidden>Reset</button>
+          </div>
+          <span class="streak-badge" id="streak-badge">🔥 0 sessions</span>
+          <p class="placeholder" id="session-status" hidden></p>
+        </div>
+      </section>
 
-    <section class="panel-section" id="settings-section">
-      <h2>Settings</h2>
-      <div class="settings-row">
-        <span id="ticktick-status">Not connected to TickTick.</span>
-        <button id="ticktick-connect-btn">Connect TickTick</button>
-        <button id="ticktick-logout-btn" hidden>Disconnect</button>
-      </div>
-      <div class="settings-row">
-        <span id="blocking-status">Sites not blocked.</span>
-        <button id="unblock-now-btn" class="link-btn" hidden>Unblock now</button>
-      </div>
-      <p class="placeholder" id="blocking-domains-hint"></p>
-    </section>
+      <section class="panel-section panel-card" id="tasks-section">
+        <div class="section-header">
+          <h2>Tasks</h2>
+          <button id="refresh-tasks-btn" class="link-btn" hidden>Refresh</button>
+        </div>
+        <p class="placeholder" id="tasks-status">Connect TickTick to see your tasks.</p>
+        <ul class="task-list" id="task-list" hidden></ul>
+      </section>
+
+      <section class="panel-section panel-card panel-card-quiet" id="settings-section">
+        <h2>Settings</h2>
+        <div class="settings-row">
+          <span id="ticktick-status">Not connected to TickTick.</span>
+          <button id="ticktick-connect-btn" class="btn">Connect TickTick</button>
+          <button id="ticktick-logout-btn" class="btn" hidden>Disconnect</button>
+        </div>
+        <div class="settings-row">
+          <span id="blocking-status">Sites not blocked.</span>
+          <button id="unblock-now-btn" class="link-btn" hidden>Unblock now</button>
+        </div>
+        <p class="placeholder" id="blocking-domains-hint"></p>
+      </section>
+    </main>
 
     <script src="renderer.js"></script>
   </body>

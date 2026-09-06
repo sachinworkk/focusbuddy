@@ -86,6 +86,11 @@ function registerIpcHandlers() {
     if (widget) widget.setPosition(Math.round(x), Math.round(y));
   });
 
+  ipcMain.on('panel:hide', () => {
+    const panel = getPanelWindow();
+    if (panel && !panel.isDestroyed()) panel.hide();
+  });
+
   ipcMain.handle('ticktick:is-authenticated', () => {
     return ticktickAuth.isAuthenticated();
   });

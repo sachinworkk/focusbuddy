@@ -176,12 +176,22 @@ function formatTime(totalSeconds) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
+const panelAvatar = document.getElementById('panel-avatar');
+
+function moodFor(state) {
+  if (state.status === 'running') return 'focused';
+  if (state.status === 'paused') return 'paused';
+  if (state.status === 'completed') return 'celebrating';
+  return 'idle';
+}
+
 function renderTimerState(state) {
   const displaySeconds = state.status === 'idle'
     ? Number(timerMinutesInput.value || 0) * 60
     : state.remainingSeconds;
   timerDisplayEl.textContent = formatTime(displaySeconds);
   timerTaskEl.textContent = state.task ? state.task.title : 'No task selected';
+  panelAvatar.dataset.mood = moodFor(state);
 
   const running = state.status === 'running';
   const paused = state.status === 'paused';
@@ -270,6 +280,21 @@ timerResumeBtn.addEventListener('click', async () => {
 timerResetBtn.addEventListener('click', async () => {
   sessionStatusEl.hidden = true;
   renderTimerState(await window.focusbuddy.timer.reset());
+});
+
+document.querySelectorAll('.mode-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.mode-tab').forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+
+document.getElementById('panel-close-btn').addEventListener('click', () => window.focusbuddy.panel.hide());
+window.focusbuddy.panel.onWillShow((anchorSide) => {
+  document.body.dataset.anchor = anchorSide === 'right' ? 'left' : 'right';
+  document.body.classList.remove('panel-visible');
+  void document.body.offsetWidth;
+  document.body.classList.add('panel-visible');
 });
 
 refreshConnectionState();

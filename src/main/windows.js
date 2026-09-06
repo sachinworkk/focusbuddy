@@ -3,7 +3,7 @@ const { BrowserWindow, screen, app } = require('electron');
 const { getWidgetPosition, setWidgetPosition } = require('./store');
 
 const WIDGET_SIZE = 120;
-const PANEL_SIZE = { width: 340, height: 480 };
+const PANEL_SIZE = { width: 280, height: 380 };
 
 let widgetWindow = null;
 let panelWindow = null;
@@ -67,7 +67,8 @@ function createPanelWindow() {
     width: PANEL_SIZE.width,
     height: PANEL_SIZE.height,
     show: false,
-    frame: true,
+    frame: false,
+    transparent: true,
     resizable: false,
     skipTaskbar: true,
     title: 'FocusBuddy',
@@ -94,8 +95,12 @@ function positionPanelNearWidget() {
   const widgetBounds = widgetWindow.getBounds();
   const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
 
+  let anchorSide = 'left';
   let x = widgetBounds.x - PANEL_SIZE.width - 12;
-  if (x < 0) x = widgetBounds.x + WIDGET_SIZE + 12;
+  if (x < 0) {
+    x = widgetBounds.x + WIDGET_SIZE + 12;
+    anchorSide = 'right';
+  }
   if (x + PANEL_SIZE.width > screenWidth) x = screenWidth - PANEL_SIZE.width - 12;
 
   let y = widgetBounds.y + WIDGET_SIZE - PANEL_SIZE.height;
@@ -103,6 +108,7 @@ function positionPanelNearWidget() {
   if (y + PANEL_SIZE.height > screenHeight) y = screenHeight - PANEL_SIZE.height;
 
   panelWindow.setBounds({ x, y, width: PANEL_SIZE.width, height: PANEL_SIZE.height });
+  return anchorSide;
 }
 
 function togglePanelWindow() {
@@ -113,7 +119,8 @@ function togglePanelWindow() {
   if (panelWindow.isVisible()) {
     panelWindow.hide();
   } else {
-    positionPanelNearWidget();
+    const anchorSide = positionPanelNearWidget();
+    panelWindow.webContents.send('panel:will-show', anchorSide);
     panelWindow.show();
   }
 }
