@@ -39,6 +39,10 @@ contextBridge.exposeInMainWorld('focusbuddy', {
       return () => ipcRenderer.removeListener('session:completed', handler);
     },
   },
+  settings: {
+    get: () => ipcRenderer.invoke('settings:get'),
+    update: (partial) => ipcRenderer.invoke('settings:update', partial),
+  },
   blocking: {
     getDomains: () => ipcRenderer.invoke('blocking:get-domains'),
     getEnabledDefault: () => ipcRenderer.invoke('blocking:get-enabled-default'),

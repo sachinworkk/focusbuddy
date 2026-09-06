@@ -6,6 +6,7 @@ const timer = require('./timer');
 const sessionLog = require('./session-log');
 const blockServer = require('./block-server');
 const config = require('../config');
+const store = require('./store');
 
 function broadcastTimerState(state) {
   for (const win of [getWidgetWindow(), getPanelWindow()]) {
@@ -124,8 +125,8 @@ function registerIpcHandlers() {
   timer.onChange(broadcastTimerState);
   timer.onCompleted(handleTimerCompleted);
 
-  ipcMain.handle('timer:get-default-minutes', () => config.pomodoro.defaultMinutes);
-  ipcMain.handle('timer:get-mark-complete-default', () => config.pomodoro.markTaskCompleteByDefault);
+  ipcMain.handle('timer:get-default-minutes', () => store.getSettings().defaultMinutes);
+  ipcMain.handle('timer:get-mark-complete-default', () => store.getSettings().markTaskCompleteByDefault);
   ipcMain.handle('timer:get-state', () => timer.getState());
   ipcMain.handle('timer:start', async (event, { minutes, task, markTaskComplete, blockSites }) => {
     if (blockSites) {
@@ -143,11 +144,26 @@ function registerIpcHandlers() {
   });
 
   ipcMain.handle('blocking:get-domains', () => config.blocking.domains);
-  ipcMain.handle('blocking:get-enabled-default', () => config.blocking.enabledByDefault);
+  ipcMain.handle('blocking:get-enabled-default', () => store.getSettings().blockSitesByDefault);
   ipcMain.handle('blocking:is-active', () => blockServer.isActive());
   ipcMain.handle('blocking:unblock-now', () => {
     unblockAndNotify();
     return blockServer.isActive();
+  });
+
+  ipcMain.handle('settings:get', () => store.getSettings());
+  ipcMain.handle('settings:update', (event, partial) => {
+    const clean = {};
+    if (partial && Number.isFinite(Number(partial.defaultMinutes))) {
+      clean.defaultMinutes = Math.min(180, Math.max(1, Math.round(Number(partial.defaultMinutes))));
+    }
+    if (partial && typeof partial.markTaskCompleteByDefault === 'boolean') {
+      clean.markTaskCompleteByDefault = partial.markTaskCompleteByDefault;
+    }
+    if (partial && typeof partial.blockSitesByDefault === 'boolean') {
+      clean.blockSitesByDefault = partial.blockSitesByDefault;
+    }
+    return store.setSettings(clean);
   });
 }
 
