@@ -1,6 +1,14 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('focusbuddy', {
+  panel: {
+    hide: () => ipcRenderer.send('panel:hide'),
+    onWillShow: (callback) => {
+      const handler = (event, anchorSide) => callback(anchorSide);
+      ipcRenderer.on('panel:will-show', handler);
+      return () => ipcRenderer.removeListener('panel:will-show', handler);
+    },
+  },
   ticktick: {
     isAuthenticated: () => ipcRenderer.invoke('ticktick:is-authenticated'),
     connect: () => ipcRenderer.invoke('ticktick:connect'),

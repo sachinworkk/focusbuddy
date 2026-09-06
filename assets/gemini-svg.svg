@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <!-- Shadow -->
+  <ellipse cx="64" cy="112" rx="30" ry="5" fill="#1e293b" opacity="0.5"/>
+
+  <!-- Terracotta Pot -->
+  <path d="M42 72 L46 106 C46 108 48 110 50 110 L78 110 C80 110 82 108 82 106 L86 72 Z" fill="#e06d53"/>
+  <rect x="38" y="66" width="52" height="8" rx="2" fill="#ee7d63"/>
+  <rect x="38" y="72" width="52" height="2" fill="#c85940"/>
+  <!-- Soil -->
+  <ellipse cx="64" cy="67" rx="22" ry="3" fill="#5c3a21"/>
+
+  <!-- Stem -->
+  <path d="M64 67 C64 50 63 38 64 28" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Left Leaf -->
+  <path d="M64 45 C48 45 40 32 40 32 C40 32 54 30 64 41 Z" fill="#22c55e"/>
+  <!-- Right Leaf -->
+  <path d="M64 38 C80 38 88 25 88 25 C88 25 74 23 64 34 Z" fill="#4ade80"/>
+
+  <!-- Pot Face (Cute Idle Smile) -->
+  <circle cx="54" cy="88" r="2.5" fill="#2d3748"/>
+  <circle cx="74" cy="88" r="2.5" fill="#2d3748"/>
+  <path d="M61 92 Q64 95 67 92" fill="none" stroke="#2d3748" stroke-width="2" stroke-linecap="round"/>
+</svg>

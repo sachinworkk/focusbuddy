@@ -4,7 +4,7 @@ const ticktickAuth = require('./ticktick/auth');
 const ticktickApi = require('./ticktick/api');
 const timer = require('./timer');
 const sessionLog = require('./session-log');
-const hosts = require('../platform/hosts');
+const blockServer = require('./block-server');
 const config = require('../config');
 
 function broadcastTimerState(state) {
@@ -31,13 +31,9 @@ function broadcastBlockingState(active) {
   }
 }
 
-async function unblockAndNotify() {
-  if (!hosts.isBlockingActive()) return;
-  try {
-    await hosts.unblockDomains();
-  } finally {
-    broadcastBlockingState(hosts.isBlockingActive());
-  }
+function unblockAndNotify() {
+  blockServer.setActive(false);
+  broadcastBlockingState(blockServer.isActive());
 }
 
 async function handleTimerCompleted({ task, durationSeconds, startedAt, endedAt, markTaskComplete }) {
@@ -71,7 +67,7 @@ async function handleTimerCompleted({ task, durationSeconds, startedAt, endedAt,
     focusError = err.message;
   }
 
-  await unblockAndNotify();
+  unblockAndNotify();
   broadcastSessionCompleted({ entry, ticktickSynced, ticktickError, focusSynced, focusError });
 }
 
@@ -88,6 +84,11 @@ function registerIpcHandlers() {
   ipcMain.on('widget:move', (event, x, y) => {
     const widget = getWidgetWindow();
     if (widget) widget.setPosition(Math.round(x), Math.round(y));
+  });
+
+  ipcMain.on('panel:hide', () => {
+    const panel = getPanelWindow();
+    if (panel && !panel.isDestroyed()) panel.hide();
   });
 
   ipcMain.handle('ticktick:is-authenticated', () => {
@@ -123,28 +124,25 @@ function registerIpcHandlers() {
   ipcMain.handle('timer:get-state', () => timer.getState());
   ipcMain.handle('timer:start', async (event, { minutes, task, markTaskComplete, blockSites }) => {
     if (blockSites) {
-      try {
-        await hosts.blockDomains(config.blocking.domains);
-      } finally {
-        broadcastBlockingState(hosts.isBlockingActive());
-      }
+      blockServer.setActive(true);
+      broadcastBlockingState(blockServer.isActive());
     }
     return timer.start(minutes, task, { markTaskComplete });
   });
   ipcMain.handle('timer:pause', () => timer.pause());
   ipcMain.handle('timer:resume', () => timer.resume());
-  ipcMain.handle('timer:reset', async () => {
+  ipcMain.handle('timer:reset', () => {
     const state = timer.reset();
-    await unblockAndNotify();
+    unblockAndNotify();
     return state;
   });
 
   ipcMain.handle('blocking:get-domains', () => config.blocking.domains);
   ipcMain.handle('blocking:get-enabled-default', () => config.blocking.enabledByDefault);
-  ipcMain.handle('blocking:is-active', () => hosts.isBlockingActive());
-  ipcMain.handle('blocking:unblock-now', async () => {
-    await unblockAndNotify();
-    return hosts.isBlockingActive();
+  ipcMain.handle('blocking:is-active', () => blockServer.isActive());
+  ipcMain.handle('blocking:unblock-now', () => {
+    unblockAndNotify();
+    return blockServer.isActive();
   });
 }
 

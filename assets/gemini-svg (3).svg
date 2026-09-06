@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <!-- Shadow -->
+  <ellipse cx="64" cy="112" rx="30" ry="5" fill="#1e293b" opacity="0.5"/>
+
+  <!-- Water Droplet -->
+  <path d="M92 46 C92 46 98 54 95 58 C92 61 87 59 87 55 C87 51 92 46 92 46 Z" fill="#38bdf8"/>
+
+  <!-- Terracotta Pot -->
+  <path d="M42 72 L46 106 C46 108 48 110 50 110 L78 110 C80 110 82 108 82 106 L86 72 Z" fill="#e06d53"/>
+  <rect x="38" y="66" width="52" height="8" rx="2" fill="#ee7d63"/>
+  <!-- Dry Soil -->
+  <ellipse cx="64" cy="67" rx="22" ry="3" fill="#78350f"/>
+
+  <!-- Drooping Stem -->
+  <path d="M64 67 C64 55 52 48 48 38" fill="none" stroke="#84cc16" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Drooping Leaves -->
+  <path d="M50 42 C38 48 34 60 34 60 C34 60 46 56 52 46 Z" fill="#65a30d"/>
+  <path d="M46 36 C40 26 28 28 28 28 C28 28 34 38 44 38 Z" fill="#84cc16"/>
+
+  <!-- Pot Face (Gentle Worried Eyes) -->
+  <circle cx="54" cy="88" r="2.5" fill="#2d3748"/>
+  <circle cx="74" cy="88" r="2.5" fill="#2d3748"/>
+  <circle cx="52" cy="86" r="1" fill="#ffffff"/>
+  <circle cx="72" cy="86" r="1" fill="#ffffff"/>
+  <path d="M60 94 Q64 91 68 94" fill="none" stroke="#2d3748" stroke-width="2" stroke-linecap="round"/>
+</svg>

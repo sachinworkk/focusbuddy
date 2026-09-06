@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <!-- Sparkles & Blossoms -->
+  <polygon points="32,24 35,30 42,30 37,34 39,40 32,36 25,40 27,34 22,30 29,30" fill="#fbbf24"/>
+  <polygon points="96,20 98,25 104,25 99,28 101,33 96,30 91,33 93,28 88,25 94,25" fill="#f43f5e"/>
+  <circle cx="64" cy="10" r="3" fill="#38bdf8"/>
+
+  <!-- Shadow -->
+  <ellipse cx="64" cy="114" rx="26" ry="4" fill="#1e293b" opacity="0.4"/>
+
+  <!-- Terracotta Pot -->
+  <path d="M42 72 L46 106 C46 108 48 110 50 110 L78 110 C80 110 82 108 82 106 L86 72 Z" fill="#e06d53"/>
+  <rect x="38" y="66" width="52" height="8" rx="2" fill="#ee7d63"/>
+
+  <!-- Full Wild Bloom Stem -->
+  <path d="M64 67 C60 52 68 40 64 28" fill="none" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Pink & Purple Flowers -->
+  <circle cx="50" cy="30" r="7" fill="#ec4899"/>
+  <circle cx="50" cy="30" r="3" fill="#fef08a"/>
+  
+  <circle cx="78" cy="26" r="8" fill="#a855f7"/>
+  <circle cx="78" cy="26" r="3.5" fill="#fef08a"/>
+
+  <!-- Cheerful Happy Pot Face -->
+  <ellipse cx="48" cy="86" rx="4" ry="3" fill="#f87171" opacity="0.5"/>
+  <ellipse cx="80" cy="86" rx="4" ry="3" fill="#f87171" opacity="0.5"/>
+  <path d="M50 82 L55 77 L60 82" fill="none" stroke="#2d3748" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M68 82 L73 77 L78 82" fill="none" stroke="#2d3748" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M60 88 Q64 96 68 88 Z" fill="#f43f5e" stroke="#2d3748" stroke-width="1.5"/>
+</svg>
