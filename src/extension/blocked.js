@@ -4,6 +4,7 @@ const POLL_MS = 2000;
 
 const timerEl = document.getElementById('timer');
 const taskEl = document.getElementById('task');
+const avatarEl = document.getElementById('avatar');
 
 function formatSeconds(total) {
   const m = Math.floor(total / 60);
@@ -27,6 +28,7 @@ async function poll() {
     // which re-triggers poll() and loops forever — so stop polling and
     // let the user navigate away themselves instead.
     clearInterval(pollId);
+    avatarEl.classList.add('is-done');
     timerEl.textContent = "Session's over!";
     taskEl.textContent = 'You can close this tab or head back.';
     return;

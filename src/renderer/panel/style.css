@@ -81,6 +81,33 @@ body.panel-visible {
   gap: var(--fb-space-3);
 }
 
+.panel-body,
+.task-list {
+  scrollbar-width: thin;
+  scrollbar-color: var(--fb-border) transparent;
+}
+
+.panel-body::-webkit-scrollbar,
+.task-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.panel-body::-webkit-scrollbar-track,
+.task-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panel-body::-webkit-scrollbar-thumb,
+.task-list::-webkit-scrollbar-thumb {
+  background: var(--fb-border);
+  border-radius: var(--fb-radius-full);
+}
+
+.panel-body::-webkit-scrollbar-thumb:hover,
+.task-list::-webkit-scrollbar-thumb:hover {
+  background: var(--fb-text-faint);
+}
+
 .panel-card {
   background: var(--fb-surface);
   border: 1px solid var(--fb-border);
