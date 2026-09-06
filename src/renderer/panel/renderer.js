@@ -32,12 +32,20 @@ function renderConnected(connected) {
     taskListEl.innerHTML = '';
     tasksStatusEl.hidden = false;
     tasksStatusEl.textContent = 'Connect TickTick to see your tasks.';
+    window.focusbuddy.avatar.setOverdueState(false);
   }
+}
+
+function updateOverdueState(tasks) {
+  const now = new Date();
+  const overdue = tasks.some((task) => task.dueDate && new Date(task.dueDate) < now);
+  window.focusbuddy.avatar.setOverdueState(overdue);
 }
 
 function renderTasks(tasks) {
   currentTasks = tasks;
   taskListEl.innerHTML = '';
+  updateOverdueState(tasks);
 
   if (!tasks.length) {
     tasksStatusEl.hidden = false;

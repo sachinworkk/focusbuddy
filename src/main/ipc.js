@@ -93,6 +93,13 @@ function registerIpcHandlers() {
     return ticktickApi.getAllTasks();
   });
 
+  ipcMain.on('avatar:set-overdue-state', (event, overdue) => {
+    const widget = getWidgetWindow();
+    if (widget && !widget.isDestroyed()) {
+      widget.webContents.send('avatar:overdue-state', !!overdue);
+    }
+  });
+
   timer.onChange(broadcastTimerState);
   timer.onCompleted(handleTimerCompleted);
 

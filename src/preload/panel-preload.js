@@ -7,6 +7,9 @@ contextBridge.exposeInMainWorld('focusbuddy', {
     logout: () => ipcRenderer.invoke('ticktick:logout'),
     getTasks: () => ipcRenderer.invoke('ticktick:get-tasks'),
   },
+  avatar: {
+    setOverdueState: (overdue) => ipcRenderer.send('avatar:set-overdue-state', overdue),
+  },
   timer: {
     getDefaultMinutes: () => ipcRenderer.invoke('timer:get-default-minutes'),
     getMarkCompleteDefault: () => ipcRenderer.invoke('timer:get-mark-complete-default'),

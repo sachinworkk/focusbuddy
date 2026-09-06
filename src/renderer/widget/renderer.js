@@ -44,15 +44,34 @@ window.addEventListener('mouseup', () => {
 
 const progressRing = document.getElementById('progressRing');
 
-function updateTimerDisplay(state) {
-  const percent = state.durationSeconds > 0
-    ? Math.min(100, Math.round(((state.durationSeconds - state.remainingSeconds) / state.durationSeconds) * 100))
+let timerState = { status: 'idle', durationSeconds: 0, remainingSeconds: 0 };
+let hasOverdueTask = false;
+
+function moodFor(state, overdue) {
+  if (state.status === 'running') return 'focused';
+  if (state.status === 'paused') return 'paused';
+  if (state.status === 'completed') return 'celebrating';
+  return overdue ? 'nudge' : 'idle';
+}
+
+function render() {
+  const percent = timerState.durationSeconds > 0
+    ? Math.min(100, Math.round(((timerState.durationSeconds - timerState.remainingSeconds) / timerState.durationSeconds) * 100))
     : 0;
   progressRing.style.setProperty('--progress', percent);
-  avatar.classList.toggle('running', state.status === 'running');
-  avatar.classList.toggle('paused', state.status === 'paused');
-  avatar.classList.toggle('completed', state.status === 'completed');
+  avatar.dataset.mood = moodFor(timerState, hasOverdueTask);
+}
+
+function updateTimerDisplay(state) {
+  timerState = state;
+  render();
+}
+
+function updateOverdueState(overdue) {
+  hasOverdueTask = overdue;
+  render();
 }
 
 window.focusbuddy.timer.getState().then(updateTimerDisplay);
 window.focusbuddy.timer.onState(updateTimerDisplay);
+window.focusbuddy.avatar.onOverdueState(updateOverdueState);

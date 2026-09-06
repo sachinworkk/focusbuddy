@@ -12,4 +12,11 @@ contextBridge.exposeInMainWorld('focusbuddy', {
       return () => ipcRenderer.removeListener('timer:state', handler);
     },
   },
+  avatar: {
+    onOverdueState: (callback) => {
+      const handler = (event, overdue) => callback(overdue);
+      ipcRenderer.on('avatar:overdue-state', handler);
+      return () => ipcRenderer.removeListener('avatar:overdue-state', handler);
+    },
+  },
 });
