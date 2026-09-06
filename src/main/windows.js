@@ -3,10 +3,11 @@ const { BrowserWindow, screen, app } = require('electron');
 const { getWidgetPosition, setWidgetPosition } = require('./store');
 
 const WIDGET_SIZE = 120;
-const PANEL_SIZE = { width: 280, height: 380 };
+const PANEL_SIZE = { width: 340, height: 460 };
 
 let widgetWindow = null;
 let panelWindow = null;
+let panelReady = false;
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -81,6 +82,10 @@ function createPanelWindow() {
 
   panelWindow.loadFile(path.join(__dirname, '..', 'renderer', 'panel', 'index.html'));
 
+  panelWindow.once('ready-to-show', () => {
+    panelReady = true;
+  });
+
   panelWindow.on('close', (event) => {
     if (app.isQuitting) return;
     event.preventDefault();
@@ -118,10 +123,19 @@ function togglePanelWindow() {
 
   if (panelWindow.isVisible()) {
     panelWindow.hide();
-  } else {
+    return;
+  }
+
+  const showPanel = () => {
     const anchorSide = positionPanelNearWidget();
     panelWindow.webContents.send('panel:will-show', anchorSide);
     panelWindow.show();
+  };
+
+  if (panelReady) {
+    showPanel();
+  } else {
+    panelWindow.once('ready-to-show', showPanel);
   }
 }
 

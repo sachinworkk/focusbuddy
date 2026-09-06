@@ -78,6 +78,25 @@ function createTaskItem(task) {
   item.dataset.taskId = task.id;
   if (task.id === selectedTaskId) item.classList.add('selected');
 
+  const complete = document.createElement('input');
+  complete.type = 'checkbox';
+  complete.className = 'task-complete-checkbox';
+  complete.addEventListener('click', (event) => event.stopPropagation());
+  complete.addEventListener('change', async () => {
+    complete.disabled = true;
+    try {
+      await window.focusbuddy.ticktick.completeTask(task.projectId, task.id);
+      window.focusbuddySounds.celebrate();
+      if (task.id === selectedTaskId) selectedTaskId = null;
+      renderTasks(currentTasks.filter((t) => t.id !== task.id));
+    } catch (err) {
+      complete.checked = false;
+      complete.disabled = false;
+      tasksStatusEl.hidden = false;
+      tasksStatusEl.textContent = `Couldn't mark "${task.title}" complete: ${err.message}`;
+    }
+  });
+
   const title = document.createElement('span');
   title.className = 'task-title';
   title.textContent = task.title;
@@ -86,6 +105,7 @@ function createTaskItem(task) {
   project.className = 'task-project';
   project.textContent = task.projectName;
 
+  item.appendChild(complete);
   item.appendChild(title);
   item.appendChild(project);
   item.addEventListener('click', () => {
@@ -286,14 +306,6 @@ timerResetBtn.addEventListener('click', async () => {
   window.focusbuddySounds.click();
   sessionStatusEl.hidden = true;
   renderTimerState(await window.focusbuddy.timer.reset());
-});
-
-document.querySelectorAll('.mode-tab').forEach((tab) => {
-  tab.addEventListener('click', () => {
-    window.focusbuddySounds.click();
-    document.querySelectorAll('.mode-tab').forEach((t) => t.classList.remove('active'));
-    tab.classList.add('active');
-  });
 });
 
 document.getElementById('panel-close-btn').addEventListener('click', () => window.focusbuddy.panel.hide());

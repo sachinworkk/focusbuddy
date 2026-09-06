@@ -109,6 +109,11 @@ function registerIpcHandlers() {
     return ticktickApi.getAllTasks();
   });
 
+  ipcMain.handle('ticktick:complete-task', async (event, { projectId, taskId }) => {
+    await ticktickApi.completeTask(projectId, taskId);
+    return true;
+  });
+
   ipcMain.on('avatar:set-overdue-state', (event, overdue) => {
     const widget = getWidgetWindow();
     if (widget && !widget.isDestroyed()) {
