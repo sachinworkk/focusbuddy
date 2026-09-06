@@ -42,6 +42,73 @@ function updateOverdueState(tasks) {
   window.focusbuddy.avatar.setOverdueState(overdue);
 }
 
+function bucketTasksByDate(tasks) {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setDate(startOfToday.getDate() + 1);
+
+  const overdue = [];
+  const today = [];
+  const upcoming = [];
+  const noDueDate = [];
+
+  for (const task of tasks) {
+    if (!task.dueDate) {
+      noDueDate.push(task);
+      continue;
+    }
+    const due = new Date(task.dueDate);
+    if (due < startOfToday) overdue.push(task);
+    else if (due < startOfTomorrow) today.push(task);
+    else upcoming.push(task);
+  }
+
+  const byDueDate = (a, b) => new Date(a.dueDate) - new Date(b.dueDate);
+  overdue.sort(byDueDate);
+  today.sort(byDueDate);
+  upcoming.sort(byDueDate);
+
+  return { overdue, today, upcoming, noDueDate };
+}
+
+function createTaskItem(task) {
+  const item = document.createElement('li');
+  item.className = 'task-item';
+  item.dataset.taskId = task.id;
+  if (task.id === selectedTaskId) item.classList.add('selected');
+
+  const title = document.createElement('span');
+  title.className = 'task-title';
+  title.textContent = task.title;
+
+  const project = document.createElement('span');
+  project.className = 'task-project';
+  project.textContent = task.projectName;
+
+  item.appendChild(title);
+  item.appendChild(project);
+  item.addEventListener('click', () => {
+    selectedTaskId = task.id === selectedTaskId ? null : task.id;
+    renderTasks(currentTasks);
+  });
+
+  return item;
+}
+
+function appendTaskSection(label, tasks) {
+  if (!tasks.length) return;
+
+  const heading = document.createElement('li');
+  heading.className = 'task-section-title';
+  heading.textContent = `${label} (${tasks.length})`;
+  taskListEl.appendChild(heading);
+
+  for (const task of tasks) {
+    taskListEl.appendChild(createTaskItem(task));
+  }
+}
+
 function renderTasks(tasks) {
   currentTasks = tasks;
   taskListEl.innerHTML = '';
@@ -57,29 +124,11 @@ function renderTasks(tasks) {
   tasksStatusEl.hidden = true;
   taskListEl.hidden = false;
 
-  for (const task of tasks) {
-    const item = document.createElement('li');
-    item.className = 'task-item';
-    item.dataset.taskId = task.id;
-    if (task.id === selectedTaskId) item.classList.add('selected');
-
-    const title = document.createElement('span');
-    title.className = 'task-title';
-    title.textContent = task.title;
-
-    const project = document.createElement('span');
-    project.className = 'task-project';
-    project.textContent = task.projectName;
-
-    item.appendChild(title);
-    item.appendChild(project);
-    item.addEventListener('click', () => {
-      selectedTaskId = task.id === selectedTaskId ? null : task.id;
-      renderTasks(tasks);
-    });
-
-    taskListEl.appendChild(item);
-  }
+  const { overdue, today, upcoming, noDueDate } = bucketTasksByDate(tasks);
+  appendTaskSection('Overdue', overdue);
+  appendTaskSection('Today', today);
+  appendTaskSection('Upcoming', upcoming);
+  appendTaskSection('No due date', noDueDate);
 }
 
 async function loadTasks() {

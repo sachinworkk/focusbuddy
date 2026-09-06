@@ -31,12 +31,16 @@ function getProjectData(projectId) {
   return authedFetch(`/project/${projectId}/data`);
 }
 
+const INBOX_PROJECT = { id: 'inbox', name: 'Inbox' };
+
 // TickTick's Open API has no single "all tasks" endpoint, so we fan out
-// across projects and flatten the results.
+// across projects and flatten the results. GET /project never lists the
+// Inbox, but "inbox" is a documented special-case projectId for
+// /project/{projectId}/data, so it's fetched separately and merged in.
 async function getAllTasks() {
   const projects = await getProjects();
   const perProject = await Promise.all(
-    projects.map((project) =>
+    [INBOX_PROJECT, ...projects].map((project) =>
       getProjectData(project.id).then((data) => ({ project, tasks: data.tasks || [] }))
     )
   );
