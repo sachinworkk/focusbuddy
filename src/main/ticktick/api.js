@@ -61,4 +61,18 @@ function completeTask(projectId, taskId) {
   return authedFetch(`/project/${projectId}/task/${taskId}/complete`, { method: 'POST' });
 }
 
-module.exports = { getProjects, getProjectData, getAllTasks, completeTask };
+function createFocusRecord({ taskId, startTime, endTime, durationSeconds }) {
+  return authedFetch('/focus', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 0, // Pomodoro
+      taskId: taskId || undefined,
+      startTime,
+      endTime,
+      duration: durationSeconds,
+    }),
+  });
+}
+
+module.exports = { getProjects, getProjectData, getAllTasks, completeTask, createFocusRecord };

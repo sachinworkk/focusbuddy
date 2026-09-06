@@ -228,17 +228,18 @@ async function initTimer() {
   window.focusbuddy.timer.onSessionCompleted(renderSessionCompleted);
 }
 
-function renderSessionCompleted({ entry, ticktickSynced, ticktickError }) {
+function renderSessionCompleted({ entry, ticktickSynced, ticktickError, focusSynced, focusError }) {
   sessionStatusEl.hidden = false;
-  if (!entry.task) {
-    sessionStatusEl.textContent = 'Session logged.';
-  } else if (ticktickSynced) {
-    sessionStatusEl.textContent = `Session logged. "${entry.task.title}" marked complete in TickTick.`;
-  } else if (ticktickError) {
-    sessionStatusEl.textContent = `Session logged. Couldn't mark task complete: ${ticktickError}`;
-  } else {
-    sessionStatusEl.textContent = 'Session logged.';
+
+  const parts = ['Session logged.'];
+  if (entry.task) {
+    if (ticktickSynced) parts.push(`"${entry.task.title}" marked complete in TickTick.`);
+    else if (ticktickError) parts.push(`Couldn't mark task complete: ${ticktickError}`);
   }
+  if (focusSynced) parts.push('Focus session saved to TickTick.');
+  else if (focusError) parts.push(`Couldn't save focus session to TickTick: ${focusError}`);
+
+  sessionStatusEl.textContent = parts.join(' ');
 }
 
 timerStartBtn.addEventListener('click', async () => {

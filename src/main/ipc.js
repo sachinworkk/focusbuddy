@@ -56,8 +56,23 @@ async function handleTimerCompleted({ task, durationSeconds, startedAt, endedAt,
     }
   }
 
+  let focusSynced = false;
+  let focusError = null;
+
+  try {
+    await ticktickApi.createFocusRecord({
+      taskId: task?.id,
+      startTime: startedAt,
+      endTime: endedAt,
+      durationSeconds,
+    });
+    focusSynced = true;
+  } catch (err) {
+    focusError = err.message;
+  }
+
   await unblockAndNotify();
-  broadcastSessionCompleted({ entry, ticktickSynced, ticktickError });
+  broadcastSessionCompleted({ entry, ticktickSynced, ticktickError, focusSynced, focusError });
 }
 
 function registerIpcHandlers() {

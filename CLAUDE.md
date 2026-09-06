@@ -22,12 +22,15 @@ Primary dev machine: Linux (Ubuntu). Must remain portable to macOS/Windows later
 
 ## Hard constraints (do not violate these)
 
-1. **Never attempt to remotely start or stop TickTick's own Pomodoro timer.**
-   TickTick's official Open API v1 has no create/stop endpoint for focus
-   sessions — this was confirmed by testing and by MCP server changelogs
-   explicitly removing those commands for this reason. The in-app timer is
-   built entirely in this app; TickTick is only used for (a) reading tasks,
-   and (b) writing a _completed_ focus record after the fact.
+1. **Never attempt to remotely start or stop TickTick's own Pomodoro timer**
+   (i.e. never poll/control a live, in-progress TickTick timer session). The
+   in-app timer is built entirely in this app; TickTick is only used for
+   (a) reading tasks, and (b) writing a _completed_ focus record after the
+   fact via `POST /open/v1/focus` once this app's own countdown ends — that
+   endpoint is real and documented (confirmed 2026-09-06 against
+   developer.ticktick.com/docs/openapi.md; an earlier version of this file
+   incorrectly claimed no such endpoint existed and blocked it — build order
+   item 4 was always the intended behavior).
 2. **Isolate all OS-specific logic in one module** (hosts file path, privilege
    elevation method). Everything else must be platform-agnostic.
    - Linux/macOS hosts path: `/etc/hosts`, elevate via sudo
