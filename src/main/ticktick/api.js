@@ -19,7 +19,8 @@ async function authedFetch(path, options = {}) {
     throw new Error(`TickTick API error: ${response.status} ${await response.text()}`);
   }
 
-  return response.json();
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
 }
 
 function getProjects() {
@@ -52,4 +53,8 @@ async function getAllTasks() {
   );
 }
 
-module.exports = { getProjects, getProjectData, getAllTasks };
+function completeTask(projectId, taskId) {
+  return authedFetch(`/project/${projectId}/task/${taskId}/complete`, { method: 'POST' });
+}
+
+module.exports = { getProjects, getProjectData, getAllTasks, completeTask };

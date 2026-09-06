@@ -19,12 +19,21 @@
           Minutes
           <input type="number" id="timer-minutes" min="1" max="180" />
         </label>
+        <label class="timer-checkbox-label">
+          <input type="checkbox" id="mark-complete-checkbox" />
+          Mark task complete in TickTick when done
+        </label>
+        <label class="timer-checkbox-label">
+          <input type="checkbox" id="block-sites-checkbox" />
+          Block distracting sites during this session
+        </label>
         <div class="timer-buttons">
           <button id="timer-start-btn">Start</button>
           <button id="timer-pause-btn" hidden>Pause</button>
           <button id="timer-resume-btn" hidden>Resume</button>
           <button id="timer-reset-btn" hidden>Reset</button>
         </div>
+        <p class="placeholder" id="session-status" hidden></p>
       </div>
     </section>
 
@@ -44,7 +53,11 @@
         <button id="ticktick-connect-btn">Connect TickTick</button>
         <button id="ticktick-logout-btn" hidden>Disconnect</button>
       </div>
-      <p class="placeholder">Distraction blocking coming soon.</p>
+      <div class="settings-row">
+        <span id="blocking-status">Sites not blocked.</span>
+        <button id="unblock-now-btn" class="link-btn" hidden>Unblock now</button>
+      </div>
+      <p class="placeholder" id="blocking-domains-hint"></p>
     </section>
 
     <script src="renderer.js"></script>

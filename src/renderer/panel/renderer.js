@@ -11,6 +11,12 @@ const timerStartBtn = document.getElementById('timer-start-btn');
 const timerPauseBtn = document.getElementById('timer-pause-btn');
 const timerResumeBtn = document.getElementById('timer-resume-btn');
 const timerResetBtn = document.getElementById('timer-reset-btn');
+const markCompleteCheckbox = document.getElementById('mark-complete-checkbox');
+const blockSitesCheckbox = document.getElementById('block-sites-checkbox');
+const sessionStatusEl = document.getElementById('session-status');
+const blockingStatusEl = document.getElementById('blocking-status');
+const unblockNowBtn = document.getElementById('unblock-now-btn');
+const blockingDomainsHintEl = document.getElementById('blocking-domains-hint');
 
 let selectedTaskId = null;
 let currentTasks = [];
@@ -128,7 +134,26 @@ function renderTimerState(state) {
   timerResumeBtn.hidden = !paused;
   timerResetBtn.hidden = state.status === 'idle';
   timerMinutesInput.disabled = running || paused;
+  markCompleteCheckbox.disabled = running || paused;
+  blockSitesCheckbox.disabled = running || paused;
 }
+
+function renderBlockingState(active) {
+  blockingStatusEl.textContent = active ? 'Distracting sites are blocked.' : 'Sites not blocked.';
+  unblockNowBtn.hidden = !active;
+}
+
+async function initBlocking() {
+  const domains = await window.focusbuddy.blocking.getDomains();
+  blockingDomainsHintEl.textContent = `Blocks: ${domains.join(', ')}`;
+  blockSitesCheckbox.checked = await window.focusbuddy.blocking.getEnabledDefault();
+  renderBlockingState(await window.focusbuddy.blocking.isActive());
+  window.focusbuddy.blocking.onState(renderBlockingState);
+}
+
+unblockNowBtn.addEventListener('click', async () => {
+  renderBlockingState(await window.focusbuddy.blocking.unblockNow());
+});
 
 timerMinutesInput.addEventListener('input', () => {
   if (timerMinutesInput.disabled) return;
@@ -138,16 +163,42 @@ timerMinutesInput.addEventListener('input', () => {
 async function initTimer() {
   const defaultMinutes = await window.focusbuddy.timer.getDefaultMinutes();
   timerMinutesInput.value = defaultMinutes;
+  markCompleteCheckbox.checked = await window.focusbuddy.timer.getMarkCompleteDefault();
 
   const state = await window.focusbuddy.timer.getState();
   renderTimerState(state);
   window.focusbuddy.timer.onState(renderTimerState);
+  window.focusbuddy.timer.onSessionCompleted(renderSessionCompleted);
+}
+
+function renderSessionCompleted({ entry, ticktickSynced, ticktickError }) {
+  sessionStatusEl.hidden = false;
+  if (!entry.task) {
+    sessionStatusEl.textContent = 'Session logged.';
+  } else if (ticktickSynced) {
+    sessionStatusEl.textContent = `Session logged. "${entry.task.title}" marked complete in TickTick.`;
+  } else if (ticktickError) {
+    sessionStatusEl.textContent = `Session logged. Couldn't mark task complete: ${ticktickError}`;
+  } else {
+    sessionStatusEl.textContent = 'Session logged.';
+  }
 }
 
 timerStartBtn.addEventListener('click', async () => {
   const minutes = Number(timerMinutesInput.value) || 25;
   const task = currentTasks.find((t) => t.id === selectedTaskId) || null;
-  renderTimerState(await window.focusbuddy.timer.start(minutes, task));
+  sessionStatusEl.hidden = true;
+  timerStartBtn.disabled = true;
+  try {
+    renderTimerState(
+      await window.focusbuddy.timer.start(minutes, task, markCompleteCheckbox.checked, blockSitesCheckbox.checked)
+    );
+  } catch (err) {
+    sessionStatusEl.hidden = false;
+    sessionStatusEl.textContent = `Couldn't start session: ${err.message}`;
+  } finally {
+    timerStartBtn.disabled = false;
+  }
 });
 
 timerPauseBtn.addEventListener('click', async () => {
@@ -159,8 +210,10 @@ timerResumeBtn.addEventListener('click', async () => {
 });
 
 timerResetBtn.addEventListener('click', async () => {
+  sessionStatusEl.hidden = true;
   renderTimerState(await window.focusbuddy.timer.reset());
 });
 
 refreshConnectionState();
 initTimer();
+initBlocking();

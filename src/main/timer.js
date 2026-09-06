@@ -7,6 +7,8 @@ let durationSeconds = 0;
 let remainingSeconds = 0;
 let task = null; // { id, title, ... } | null
 let intervalId = null;
+let startedAt = null; // ISO string, set on start()
+let markTaskComplete = false;
 
 function getState() {
   return { status, durationSeconds, remainingSeconds, task };
@@ -23,16 +25,27 @@ function tick() {
     status = 'completed';
     clearInterval(intervalId);
     intervalId = null;
+    emitChange();
+    emitter.emit('completed', {
+      task,
+      durationSeconds,
+      startedAt,
+      endedAt: new Date().toISOString(),
+      markTaskComplete,
+    });
+    return;
   }
   emitChange();
 }
 
-function start(minutes, selectedTask = null) {
+function start(minutes, selectedTask = null, options = {}) {
   clearInterval(intervalId);
   durationSeconds = Math.max(1, Math.round(Number(minutes) * 60));
   remainingSeconds = durationSeconds;
   task = selectedTask;
+  markTaskComplete = !!options.markTaskComplete;
   status = 'running';
+  startedAt = new Date().toISOString();
   intervalId = setInterval(tick, 1000);
   emitChange();
   return getState();
@@ -64,6 +77,7 @@ function reset() {
   durationSeconds = 0;
   remainingSeconds = 0;
   task = null;
+  markTaskComplete = false;
   emitChange();
   return getState();
 }
@@ -72,4 +86,8 @@ function onChange(listener) {
   emitter.on('change', listener);
 }
 
-module.exports = { start, pause, resume, reset, getState, onChange };
+function onCompleted(listener) {
+  emitter.on('completed', listener);
+}
+
+module.exports = { start, pause, resume, reset, getState, onChange, onCompleted };

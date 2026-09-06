@@ -159,6 +159,14 @@ button:disabled {
   font-size: 13px;
 }
 
+.timer-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #9a9bab;
+}
+
 .timer-buttons {
   display: flex;
   gap: 8px;

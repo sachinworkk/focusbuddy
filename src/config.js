@@ -15,5 +15,13 @@ module.exports = {
   },
   pomodoro: {
     defaultMinutes: Number(process.env.POMODORO_DEFAULT_MINUTES || 25),
+    markTaskCompleteByDefault: process.env.POMODORO_MARK_TASK_COMPLETE_DEFAULT === 'true',
+  },
+  blocking: {
+    domains: (process.env.FOCUSBUDDY_BLOCK_DOMAINS || 'youtube.com,twitter.com,x.com,reddit.com,facebook.com,instagram.com')
+      .split(',')
+      .map((d) => d.trim())
+      .filter(Boolean),
+    enabledByDefault: process.env.FOCUSBUDDY_BLOCK_ENABLED_DEFAULT === 'true',
   },
 };
