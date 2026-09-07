@@ -57,12 +57,17 @@ html, body {
   left: -6px;
   width: calc(100% + 12px);
   height: calc(100% + 12px);
-  border-radius: 50%;
   pointer-events: none;
-  background: conic-gradient(var(--ring-color, transparent) calc(var(--progress, 0) * 1%), transparent 0);
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
-  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
-  transition: background 0.3s linear;
+  overflow: visible;
+}
+
+.progress-ring-circle {
+  stroke: var(--ring-color, transparent);
+  stroke-dasharray: 301.59;
+  stroke-dashoffset: 301.59;
+  transition:
+    stroke-dashoffset 0.3s linear,
+    stroke 0.3s linear;
 }
 
 /* --- idle: default, gentle bob, calm resting core, closed friendly smile --- */

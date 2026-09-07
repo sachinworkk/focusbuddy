@@ -42,7 +42,8 @@ window.addEventListener('mouseup', () => {
   drag = null;
 });
 
-const progressRing = document.getElementById('progressRing');
+const progressRingCircle = document.querySelector('.progress-ring-circle');
+const RING_CIRCUMFERENCE = 301.59;
 
 let timerState = { status: 'idle', durationSeconds: 0, remainingSeconds: 0 };
 let hasOverdueTask = false;
@@ -58,8 +59,12 @@ function render() {
   const percent = timerState.durationSeconds > 0
     ? Math.min(100, Math.round(((timerState.durationSeconds - timerState.remainingSeconds) / timerState.durationSeconds) * 100))
     : 0;
-  progressRing.style.setProperty('--progress', percent);
-  avatar.dataset.mood = moodFor(timerState, hasOverdueTask);
+  progressRingCircle.style.strokeDashoffset = RING_CIRCUMFERENCE * (1 - percent / 100);
+  const mood = moodFor(timerState, hasOverdueTask);
+  avatar.dataset.mood = mood;
+
+  const taskTitle = timerState.task?.title;
+  avatar.title = (mood === 'focused' || mood === 'celebrating') && taskTitle ? taskTitle : '';
 }
 
 function updateTimerDisplay(state) {
