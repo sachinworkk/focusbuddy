@@ -129,8 +129,8 @@ function formatDueLabel(task, bucket) {
 }
 
 function closeDueEditor(control) {
-  const editor = control.querySelector('.task-due-editor');
-  if (editor) editor.remove();
+  const backdrop = document.querySelector('.task-due-modal-backdrop');
+  if (backdrop) backdrop.remove();
   control.classList.remove('editing');
 }
 
@@ -152,12 +152,42 @@ function createDueControl(task, bucket) {
 
     document.querySelectorAll('.task-due-control.editing').forEach((el) => closeDueEditor(el));
 
-    const editor = document.createElement('span');
-    editor.className = 'task-due-editor';
+    const backdrop = document.createElement('div');
+    backdrop.className = 'task-due-modal-backdrop';
+    backdrop.addEventListener('click', () => closeDueEditor(control));
+
+    const editor = document.createElement('div');
+    editor.className = 'task-due-modal';
     editor.addEventListener('click', (evt) => evt.stopPropagation());
 
-    const input = document.createElement('input');
-    input.className = 'task-due-input';
+    const title = document.createElement('div');
+    title.className = 'task-due-modal-title';
+    title.textContent = task.title;
+    editor.appendChild(title);
+
+    const pad = (n) => String(n).padStart(2, '0');
+
+    const dateField = document.createElement('div');
+    dateField.className = 'task-due-field';
+
+    const dateInput = document.createElement('input');
+    dateInput.type = 'date';
+    dateInput.className = 'task-due-input task-due-date-input';
+    dateField.appendChild(dateInput);
+
+    let timeInput = null;
+
+    const actions = document.createElement('div');
+    actions.className = 'task-due-modal-actions';
+
+    const mainActions = document.createElement('div');
+    mainActions.className = 'task-due-modal-main-actions';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'link-btn task-due-cancel-btn';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => closeDueEditor(control));
 
     const okBtn = document.createElement('button');
     okBtn.type = 'button';
@@ -165,40 +195,96 @@ function createDueControl(task, bucket) {
     okBtn.textContent = 'OK';
 
     if (bucket === 'noDueDate') {
-      input.type = 'date';
+      const timeField = document.createElement('div');
+      timeField.className = 'task-due-field';
+
+      timeInput = document.createElement('input');
+      timeInput.type = 'time';
+      timeInput.className = 'task-due-input task-due-time-input';
+      timeField.appendChild(timeInput);
+
+      timeInput.addEventListener('keydown', (evt) => {
+        if (evt.key === 'Enter') okBtn.click();
+        if (evt.key === 'Escape') closeDueEditor(control);
+      });
+
       okBtn.addEventListener('click', () => {
-        if (!input.value) return;
-        const [year, month, day] = input.value.split('-').map(Number);
-        const iso = localDateTimeToTickTickISO(year, month, day, 0, 0);
-        updateTaskDueDate(task, iso, true, iso);
+        if (!dateInput.value) return;
+        const [year, month, day] = dateInput.value.split('-').map(Number);
+        const isAllDay = !timeInput.value;
+        const [hour, minute] = isAllDay ? [0, 0] : timeInput.value.split(':').map(Number);
+        const iso = localDateTimeToTickTickISO(year, month, day, hour, minute);
+        updateTaskDueDate(task, iso, isAllDay, iso);
         closeDueEditor(control);
       });
     } else {
-      input.type = 'datetime-local';
       const due = new Date(task.dueDate);
-      const pad = (n) => String(n).padStart(2, '0');
-      input.value = `${due.getFullYear()}-${pad(due.getMonth() + 1)}-${pad(due.getDate())}T${pad(due.getHours())}:${pad(due.getMinutes())}`;
+      dateInput.value = `${due.getFullYear()}-${pad(due.getMonth() + 1)}-${pad(due.getDate())}`;
+
+      const clearDateBtn = document.createElement('button');
+      clearDateBtn.type = 'button';
+      clearDateBtn.className = 'link-btn task-due-clear-date-btn';
+      clearDateBtn.textContent = 'Clear';
+      clearDateBtn.addEventListener('click', () => {
+        dateInput.value = '';
+      });
+      dateField.appendChild(clearDateBtn);
+
+      const timeField = document.createElement('div');
+      timeField.className = 'task-due-field';
+
+      timeInput = document.createElement('input');
+      timeInput.type = 'time';
+      timeInput.className = 'task-due-input task-due-time-input';
+      timeInput.value = task.isAllDay ? '' : `${pad(due.getHours())}:${pad(due.getMinutes())}`;
+      timeField.appendChild(timeInput);
+
+      const clearTimeBtn = document.createElement('button');
+      clearTimeBtn.type = 'button';
+      clearTimeBtn.className = 'link-btn task-due-clear-time-btn';
+      clearTimeBtn.textContent = 'Clear';
+      clearTimeBtn.addEventListener('click', () => {
+        timeInput.value = '';
+      });
+      timeField.appendChild(clearTimeBtn);
+
+      timeInput.addEventListener('keydown', (evt) => {
+        if (evt.key === 'Enter') okBtn.click();
+        if (evt.key === 'Escape') closeDueEditor(control);
+      });
+
       okBtn.addEventListener('click', () => {
-        if (!input.value) return;
-        const [datePart, timePart] = input.value.split('T');
-        const [year, month, day] = datePart.split('-').map(Number);
-        const [hour, minute] = timePart.split(':').map(Number);
+        if (!dateInput.value) {
+          updateTaskDueDate(task, null, false, null);
+          closeDueEditor(control);
+          return;
+        }
+        const [year, month, day] = dateInput.value.split('-').map(Number);
+        const isAllDay = !timeInput || !timeInput.value;
+        const [hour, minute] = isAllDay ? [0, 0] : timeInput.value.split(':').map(Number);
         const iso = localDateTimeToTickTickISO(year, month, day, hour, minute);
-        updateTaskDueDate(task, iso, false, iso);
+        updateTaskDueDate(task, iso, isAllDay, iso);
         closeDueEditor(control);
       });
     }
 
-    input.addEventListener('keydown', (evt) => {
+    dateInput.addEventListener('keydown', (evt) => {
       if (evt.key === 'Enter') okBtn.click();
       if (evt.key === 'Escape') closeDueEditor(control);
     });
 
-    editor.appendChild(input);
-    editor.appendChild(okBtn);
-    control.appendChild(editor);
+    editor.appendChild(dateField);
+    if (timeInput) editor.appendChild(timeInput.parentElement);
+
+    mainActions.appendChild(cancelBtn);
+    mainActions.appendChild(okBtn);
+    actions.appendChild(mainActions);
+    editor.appendChild(actions);
+
+    backdrop.appendChild(editor);
+    document.body.appendChild(backdrop);
     control.classList.add('editing');
-    input.focus();
+    dateInput.focus();
   });
 
   control.appendChild(label);
@@ -242,9 +328,9 @@ function createTaskItem(task, bucket) {
   project.className = 'task-project';
   project.textContent = task.projectName;
 
-  item.appendChild(complete);
-  item.appendChild(title);
-  item.appendChild(project);
+  const meta = document.createElement('div');
+  meta.className = 'task-meta';
+  meta.appendChild(project);
 
   if (bucket === 'overdue') {
     const todayBtn = document.createElement('button');
@@ -255,10 +341,14 @@ function createTaskItem(task, bucket) {
       event.stopPropagation();
       updateTaskDueDate(task, `${todayYMD()}T00:00:00.000+0000`, true);
     });
-    item.appendChild(todayBtn);
+    meta.appendChild(todayBtn);
   } else {
-    item.appendChild(createDueControl(task, bucket));
+    meta.appendChild(createDueControl(task, bucket));
   }
+
+  item.appendChild(complete);
+  item.appendChild(title);
+  item.appendChild(meta);
 
   item.addEventListener('click', () => {
     window.focusbuddySounds.select();

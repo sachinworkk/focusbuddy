@@ -2,7 +2,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -22,15 +23,16 @@ body {
   opacity: 0;
   transform: scale(0.85);
   transform-origin: bottom right;
-  transition: opacity var(--fb-dur-med) var(--fb-ease-out-back),
+  transition:
+    opacity var(--fb-dur-med) var(--fb-ease-out-back),
     transform var(--fb-dur-med) var(--fb-ease-out-back);
 }
 
-body[data-anchor='left'] {
+body[data-anchor="left"] {
   transform-origin: bottom left;
 }
 
-body[data-anchor='right'] {
+body[data-anchor="right"] {
   transform-origin: bottom right;
 }
 
@@ -81,7 +83,7 @@ body.panel-visible {
   color: var(--fb-text);
 }
 
-.panel-icon-btn[aria-pressed='true'] {
+.panel-icon-btn[aria-pressed="true"] {
   background: var(--fb-surface-raised);
   color: var(--fb-accent);
 }
@@ -149,10 +151,20 @@ body.panel-visible {
   transition: transform var(--fb-dur-fast) var(--fb-ease);
 }
 
-#panel-avatar[data-mood='focused'] { animation: focusPulse 1.6s ease-in-out infinite; }
-#panel-avatar[data-mood='paused'] { animation: none; }
-#panel-avatar[data-mood='celebrating'] { animation: celebrate 0.6s ease-in-out 3; }
-#panel-avatar[data-mood='nudge'] { animation: breathe 4s ease-in-out infinite, nudgeShake 5s ease-in-out infinite; }
+#panel-avatar[data-mood="focused"] {
+  animation: focusPulse 1.6s ease-in-out infinite;
+}
+#panel-avatar[data-mood="paused"] {
+  animation: none;
+}
+#panel-avatar[data-mood="celebrating"] {
+  animation: celebrate 0.6s ease-in-out 3;
+}
+#panel-avatar[data-mood="nudge"] {
+  animation:
+    breathe 4s ease-in-out infinite,
+    nudgeShake 5s ease-in-out infinite;
+}
 
 .panel-card-quiet {
   background: transparent;
@@ -315,8 +327,15 @@ body.panel-visible {
   white-space: normal;
 }
 
-.task-project {
+.task-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   flex-shrink: 0;
+  gap: 0.12em;
+}
+
+.task-project {
   color: var(--fb-text-faint);
   font-size: var(--fb-font-size-xs);
 }
@@ -335,29 +354,81 @@ body.panel-visible {
   white-space: nowrap;
 }
 
-.task-due-editor {
-  position: absolute;
-  top: 100%;
-  right: 0;
+.task-due-modal-backdrop {
+  position: fixed;
+  inset: 0;
   z-index: 10;
-  margin-top: var(--fb-space-1);
   display: flex;
   align-items: center;
-  gap: var(--fb-space-1);
-  padding: var(--fb-space-2);
+  justify-content: center;
+  padding: var(--fb-space-4);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.task-due-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fb-space-3);
+  width: 100%;
+  max-width: 260px;
+  padding: var(--fb-space-3);
   background: var(--fb-surface-raised);
   border: 1px solid var(--fb-border);
-  border-radius: var(--fb-radius-sm);
+  border-radius: var(--fb-radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.task-due-modal-title {
+  font-size: var(--fb-font-size-sm);
+  font-weight: 600;
+  color: var(--fb-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.task-due-field {
+  display: flex;
+  align-items: center;
+  gap: var(--fb-space-2);
+}
+
 .task-due-input {
-  font-size: var(--fb-font-size-xs);
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fb-font-size-sm);
   color: var(--fb-text);
   background: var(--fb-surface);
   border: 1px solid var(--fb-border);
   border-radius: var(--fb-radius-sm);
-  padding: 2px 4px;
+  padding: var(--fb-space-1) var(--fb-space-2);
+  color-scheme: dark;
+}
+
+.task-due-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.9;
+}
+
+.task-due-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.task-due-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--fb-space-2);
+}
+
+.task-due-modal-main-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--fb-space-3);
+}
+
+.task-due-cancel-btn {
+  color: var(--fb-text-muted);
 }
 
 .task-due-ok-btn {
@@ -368,7 +439,7 @@ body.panel-visible {
   border-radius: var(--fb-radius-sm);
   font-size: var(--fb-font-size-xs);
   font-weight: 600;
-  padding: 2px 8px;
+  padding: var(--fb-space-1) var(--fb-space-3);
   cursor: pointer;
 }
 
