@@ -36,10 +36,36 @@ function renderConnected(connected) {
   }
 }
 
+function isOverdue(task) {
+  return Boolean(task.dueDate && new Date(task.dueDate) < new Date());
+}
+
 function updateOverdueState(tasks) {
-  const now = new Date();
-  const overdue = tasks.some((task) => task.dueDate && new Date(task.dueDate) < now);
-  window.focusbuddy.avatar.setOverdueState(overdue);
+  window.focusbuddy.avatar.setOverdueState(tasks.some(isOverdue));
+}
+
+function todayYMD() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function dueDateToYMD(dueDate) {
+  return dueDate ? new Date(dueDate).toISOString().slice(0, 10) : '';
+}
+
+async function updateTaskDueDate(task, newDueDateYMD) {
+  const previousDueDate = task.dueDate;
+  task.dueDate = `${newDueDateYMD}T00:00:00.000+0000`;
+  renderTasks(currentTasks);
+  try {
+    await window.focusbuddy.ticktick.updateDueDate(task.projectId, task.id, newDueDateYMD);
+  } catch (err) {
+    task.dueDate = previousDueDate;
+    renderTasks(currentTasks);
+    tasksStatusEl.hidden = false;
+    tasksStatusEl.textContent = `Couldn't update due date for "${task.title}": ${err.message}`;
+  }
 }
 
 function bucketTasksByDate(tasks) {
@@ -105,9 +131,33 @@ function createTaskItem(task) {
   project.className = 'task-project';
   project.textContent = task.projectName;
 
+  const dateInput = document.createElement('input');
+  dateInput.type = 'date';
+  dateInput.className = 'task-due-date';
+  dateInput.value = dueDateToYMD(task.dueDate);
+  dateInput.addEventListener('click', (event) => event.stopPropagation());
+  dateInput.addEventListener('change', () => {
+    if (!dateInput.value) return;
+    updateTaskDueDate(task, dateInput.value);
+  });
+
   item.appendChild(complete);
   item.appendChild(title);
   item.appendChild(project);
+  item.appendChild(dateInput);
+
+  if (isOverdue(task)) {
+    const todayBtn = document.createElement('button');
+    todayBtn.type = 'button';
+    todayBtn.className = 'link-btn task-today-btn';
+    todayBtn.textContent = 'Today';
+    todayBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      updateTaskDueDate(task, todayYMD());
+    });
+    item.appendChild(todayBtn);
+  }
+
   item.addEventListener('click', () => {
     window.focusbuddySounds.select();
     selectedTaskId = task.id === selectedTaskId ? null : task.id;
@@ -117,12 +167,15 @@ function createTaskItem(task) {
   return item;
 }
 
-function appendTaskSection(label, tasks) {
+function appendTaskSection(label, tasks, sectionAction) {
   if (!tasks.length) return;
 
   const heading = document.createElement('li');
   heading.className = 'task-section-title';
-  heading.textContent = `${label} (${tasks.length})`;
+  const labelSpan = document.createElement('span');
+  labelSpan.textContent = `${label} (${tasks.length})`;
+  heading.appendChild(labelSpan);
+  if (sectionAction) heading.appendChild(sectionAction);
   taskListEl.appendChild(heading);
 
   for (const task of tasks) {
@@ -146,7 +199,26 @@ function renderTasks(tasks) {
   taskListEl.hidden = false;
 
   const { overdue, today, upcoming, noDueDate } = bucketTasksByDate(tasks);
-  appendTaskSection('Overdue', overdue);
+
+  let moveAllBtn = null;
+  if (overdue.length) {
+    moveAllBtn = document.createElement('button');
+    moveAllBtn.type = 'button';
+    moveAllBtn.className = 'link-btn task-move-all-today-btn';
+    moveAllBtn.textContent = 'Move all to Today';
+    moveAllBtn.addEventListener('click', async (event) => {
+      event.stopPropagation();
+      moveAllBtn.disabled = true;
+      const todayDate = todayYMD();
+      // Sequential so a mid-batch failure doesn't leave a hard-to-reason-about
+      // half-applied state and error messages don't race each other.
+      for (const task of [...overdue]) {
+        await updateTaskDueDate(task, todayDate);
+      }
+    });
+  }
+
+  appendTaskSection('Overdue', overdue, moveAllBtn);
   appendTaskSection('Today', today);
   appendTaskSection('Upcoming', upcoming);
   appendTaskSection('No due date', noDueDate);

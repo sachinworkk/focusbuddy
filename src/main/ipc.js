@@ -114,6 +114,11 @@ function registerIpcHandlers() {
     return true;
   });
 
+  ipcMain.handle('ticktick:update-due-date', async (event, { projectId, taskId, dueDate }) => {
+    await ticktickApi.updateTaskDueDate(projectId, taskId, dueDate);
+    return true;
+  });
+
   ipcMain.on('avatar:set-overdue-state', (event, overdue) => {
     const widget = getWidgetWindow();
     if (widget && !widget.isDestroyed()) {

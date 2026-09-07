@@ -61,6 +61,22 @@ function completeTask(projectId, taskId) {
   return authedFetch(`/project/${projectId}/task/${taskId}/complete`, { method: 'POST' });
 }
 
+// Date-only edits (from an <input type="date">) can't express a specific
+// time-of-day or timeZone, so we deliberately convert the task to an
+// all-day task on the chosen date rather than guess at either.
+function updateTaskDueDate(projectId, taskId, dueDateYMD) {
+  return authedFetch(`/task/${taskId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: taskId,
+      projectId,
+      dueDate: `${dueDateYMD}T00:00:00.000+0000`,
+      isAllDay: true,
+    }),
+  });
+}
+
 function createFocusRecord({ taskId, startTime, endTime, durationSeconds }) {
   return authedFetch('/focus', {
     method: 'POST',
@@ -75,4 +91,11 @@ function createFocusRecord({ taskId, startTime, endTime, durationSeconds }) {
   });
 }
 
-module.exports = { getProjects, getProjectData, getAllTasks, completeTask, createFocusRecord };
+module.exports = {
+  getProjects,
+  getProjectData,
+  getAllTasks,
+  completeTask,
+  updateTaskDueDate,
+  createFocusRecord,
+};
