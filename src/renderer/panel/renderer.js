@@ -17,9 +17,22 @@ const sessionStatusEl = document.getElementById('session-status');
 const blockingStatusEl = document.getElementById('blocking-status');
 const unblockNowBtn = document.getElementById('unblock-now-btn');
 const blockingDomainsHintEl = document.getElementById('blocking-domains-hint');
+const defaultMinutesInput = document.getElementById('default-minutes-input');
+const defaultMarkCompleteCheckbox = document.getElementById('default-mark-complete-checkbox');
+const defaultBlockSitesCheckbox = document.getElementById('default-block-sites-checkbox');
+const settingsSavedHintEl = document.getElementById('settings-saved-hint');
+const settingsSection = document.getElementById('settings-section');
+const settingsToggleBtn = document.getElementById('settings-toggle-btn');
 
 let selectedTaskId = null;
 let currentTasks = [];
+let currentTimerState = null;
+
+function updateIdleTaskLabel() {
+  if (currentTimerState && currentTimerState.status !== 'idle') return;
+  const selected = currentTasks.find((t) => t.id === selectedTaskId);
+  timerTaskEl.textContent = selected ? selected.title : 'No task selected';
+}
 
 function renderConnected(connected) {
   ticktickStatusEl.textContent = connected ? 'Connected to TickTick.' : 'Not connected to TickTick.';
@@ -162,6 +175,7 @@ function createTaskItem(task) {
     window.focusbuddySounds.select();
     selectedTaskId = task.id === selectedTaskId ? null : task.id;
     renderTasks(currentTasks);
+    updateIdleTaskLabel();
   });
 
   return item;
@@ -192,6 +206,7 @@ function renderTasks(tasks) {
     tasksStatusEl.hidden = false;
     tasksStatusEl.textContent = 'No open tasks — nice work.';
     taskListEl.hidden = true;
+    updateIdleTaskLabel();
     return;
   }
 
@@ -222,6 +237,7 @@ function renderTasks(tasks) {
   appendTaskSection('Today', today);
   appendTaskSection('Upcoming', upcoming);
   appendTaskSection('No due date', noDueDate);
+  updateIdleTaskLabel();
 }
 
 async function loadTasks() {
@@ -279,11 +295,13 @@ function moodFor(state) {
 }
 
 function renderTimerState(state) {
+  currentTimerState = state;
   const displaySeconds = state.status === 'idle'
     ? Number(timerMinutesInput.value || 0) * 60
     : state.remainingSeconds;
   timerDisplayEl.textContent = formatTime(displaySeconds);
-  timerTaskEl.textContent = state.task ? state.task.title : 'No task selected';
+  if (state.status === 'idle') updateIdleTaskLabel();
+  else timerTaskEl.textContent = state.task ? state.task.title : 'No task selected';
   panelAvatar.dataset.mood = moodFor(state);
 
   const running = state.status === 'running';
@@ -380,6 +398,63 @@ timerResetBtn.addEventListener('click', async () => {
   renderTimerState(await window.focusbuddy.timer.reset());
 });
 
+let settingsSavedTimeout = null;
+function flashSettingsSaved() {
+  settingsSavedHintEl.hidden = false;
+  clearTimeout(settingsSavedTimeout);
+  settingsSavedTimeout = setTimeout(() => {
+    settingsSavedHintEl.hidden = true;
+  }, 1500);
+}
+
+async function initSettings() {
+  const settings = await window.focusbuddy.settings.get();
+  defaultMinutesInput.value = settings.defaultMinutes;
+  defaultMarkCompleteCheckbox.checked = settings.markTaskCompleteByDefault;
+  defaultBlockSitesCheckbox.checked = settings.blockSitesByDefault;
+}
+
+// Only overwrite the live start-session controls while idle, so changing
+// defaults never clobbers a running/paused session's chosen values.
+function applySettingsToLiveTimer(settings) {
+  if (currentTimerState && currentTimerState.status !== 'idle') return;
+  if (settings.defaultMinutes !== undefined) {
+    timerMinutesInput.value = settings.defaultMinutes;
+    timerDisplayEl.textContent = formatTime(Number(timerMinutesInput.value || 0) * 60);
+  }
+  if (settings.markTaskCompleteByDefault !== undefined) {
+    markCompleteCheckbox.checked = settings.markTaskCompleteByDefault;
+  }
+  if (settings.blockSitesByDefault !== undefined) {
+    blockSitesCheckbox.checked = settings.blockSitesByDefault;
+  }
+}
+
+defaultMinutesInput.addEventListener('change', async () => {
+  const settings = await window.focusbuddy.settings.update({ defaultMinutes: defaultMinutesInput.value });
+  defaultMinutesInput.value = settings.defaultMinutes;
+  applySettingsToLiveTimer({ defaultMinutes: settings.defaultMinutes });
+  flashSettingsSaved();
+});
+
+defaultMarkCompleteCheckbox.addEventListener('change', async () => {
+  await window.focusbuddy.settings.update({ markTaskCompleteByDefault: defaultMarkCompleteCheckbox.checked });
+  applySettingsToLiveTimer({ markTaskCompleteByDefault: defaultMarkCompleteCheckbox.checked });
+  flashSettingsSaved();
+});
+
+defaultBlockSitesCheckbox.addEventListener('change', async () => {
+  await window.focusbuddy.settings.update({ blockSitesByDefault: defaultBlockSitesCheckbox.checked });
+  applySettingsToLiveTimer({ blockSitesByDefault: defaultBlockSitesCheckbox.checked });
+  flashSettingsSaved();
+});
+
+settingsToggleBtn.addEventListener('click', () => {
+  const open = settingsSection.hidden;
+  settingsSection.hidden = !open;
+  settingsToggleBtn.setAttribute('aria-pressed', String(open));
+});
+
 document.getElementById('panel-close-btn').addEventListener('click', () => window.focusbuddy.panel.hide());
 window.focusbuddy.panel.onWillShow((anchorSide) => {
   document.body.dataset.anchor = anchorSide === 'right' ? 'left' : 'right';
@@ -391,3 +466,4 @@ window.focusbuddy.panel.onWillShow((anchorSide) => {
 refreshConnectionState();
 initTimer();
 initBlocking();
+initSettings();

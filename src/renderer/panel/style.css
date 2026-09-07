@@ -54,6 +54,14 @@ body.panel-visible {
   font-weight: 600;
 }
 
+.panel-header-actions {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  gap: var(--fb-space-1);
+}
+
+.panel-icon-btn,
 .panel-close-btn {
   -webkit-app-region: no-drag;
   background: none;
@@ -67,9 +75,15 @@ body.panel-visible {
   line-height: 1;
 }
 
+.panel-icon-btn:hover,
 .panel-close-btn:hover {
   background: var(--fb-surface-raised);
   color: var(--fb-text);
+}
+
+.panel-icon-btn[aria-pressed='true'] {
+  background: var(--fb-surface-raised);
+  color: var(--fb-accent);
 }
 
 .panel-body {
@@ -178,6 +192,12 @@ body.panel-visible {
   font-size: var(--fb-font-size-xs);
   cursor: pointer;
   padding: 0;
+}
+
+.settings-divider {
+  height: 1px;
+  background: var(--fb-border);
+  margin: var(--fb-space-3) 0;
 }
 
 .settings-row {

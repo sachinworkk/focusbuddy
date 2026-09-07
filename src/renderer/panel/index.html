@@ -9,7 +9,10 @@
   <body>
     <header class="panel-header" id="panel-header">
       <span class="panel-header-title">FocusBuddy</span>
-      <button class="panel-close-btn" id="panel-close-btn" aria-label="Close">✕</button>
+      <div class="panel-header-actions">
+        <button class="panel-icon-btn" id="settings-toggle-btn" aria-label="Settings" aria-pressed="false">⚙</button>
+        <button class="panel-close-btn" id="panel-close-btn" aria-label="Close">✕</button>
+      </div>
     </header>
 
     <main class="panel-body">
@@ -103,7 +106,7 @@
         <ul class="task-list" id="task-list" hidden></ul>
       </section>
 
-      <section class="panel-section panel-card panel-card-quiet" id="settings-section">
+      <section class="panel-section panel-card panel-card-quiet" id="settings-section" hidden>
         <h2>Settings</h2>
         <div class="settings-row">
           <span id="ticktick-status">Not connected to TickTick.</span>
@@ -115,6 +118,28 @@
           <button id="unblock-now-btn" class="link-btn" hidden>Unblock now</button>
         </div>
         <p class="placeholder" id="blocking-domains-hint"></p>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-row">
+          <label class="timer-duration-label" style="flex:1">
+            Default session length (minutes)
+            <input type="number" id="default-minutes-input" min="1" max="180" />
+          </label>
+        </div>
+        <div class="settings-row">
+          <label class="timer-checkbox-label">
+            <input type="checkbox" id="default-mark-complete-checkbox" />
+            Mark task complete in TickTick by default
+          </label>
+        </div>
+        <div class="settings-row">
+          <label class="timer-checkbox-label">
+            <input type="checkbox" id="default-block-sites-checkbox" />
+            Block distracting sites by default
+          </label>
+        </div>
+        <p class="placeholder" id="settings-saved-hint" hidden>Saved.</p>
       </section>
     </main>
 
