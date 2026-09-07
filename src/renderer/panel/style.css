@@ -302,7 +302,8 @@ body.panel-visible {
 .task-title {
   min-width: 0;
   flex: 1;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: normal;
   white-space: normal;
 }
 
@@ -312,26 +313,27 @@ body.panel-visible {
   font-size: var(--fb-font-size-xs);
 }
 
-.task-due-date {
-  flex-shrink: 0;
-  font-size: var(--fb-font-size-xs);
-  font-family: inherit;
-  color: var(--fb-text-muted);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--fb-radius-sm);
-  padding: 0.1em 0.2em;
-  cursor: pointer;
-}
-
-.task-due-date:hover,
-.task-due-date:focus {
-  border-color: var(--fb-accent);
-  background: var(--fb-surface-raised);
-}
-
 .task-today-btn {
   flex-shrink: 0;
+}
+
+.task-due-control {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.task-due-label {
+  color: var(--fb-text-muted);
+  white-space: nowrap;
+}
+
+.task-due-input {
+  position: absolute;
+  inset: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .timer-task {

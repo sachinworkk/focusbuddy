@@ -115,8 +115,8 @@ function registerIpcHandlers() {
     return true;
   });
 
-  ipcMain.handle('ticktick:update-due-date', async (event, { projectId, taskId, dueDate }) => {
-    await ticktickApi.updateTaskDueDate(projectId, taskId, dueDate);
+  ipcMain.handle('ticktick:update-due-date', async (event, { projectId, taskId, dueDate, isAllDay }) => {
+    await ticktickApi.updateTaskDueDate(projectId, taskId, dueDate, isAllDay);
     return true;
   });
 

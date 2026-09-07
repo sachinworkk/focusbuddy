@@ -63,18 +63,17 @@ function todayYMD() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-function dueDateToYMD(dueDate) {
-  return dueDate ? new Date(dueDate).toISOString().slice(0, 10) : '';
-}
-
-async function updateTaskDueDate(task, newDueDateYMD) {
+async function updateTaskDueDate(task, dueDateISO, isAllDay) {
   const previousDueDate = task.dueDate;
-  task.dueDate = `${newDueDateYMD}T00:00:00.000+0000`;
+  const previousIsAllDay = task.isAllDay;
+  task.dueDate = dueDateISO;
+  task.isAllDay = isAllDay;
   renderTasks(currentTasks);
   try {
-    await window.focusbuddy.ticktick.updateDueDate(task.projectId, task.id, newDueDateYMD);
+    await window.focusbuddy.ticktick.updateDueDate(task.projectId, task.id, dueDateISO, isAllDay);
   } catch (err) {
     task.dueDate = previousDueDate;
+    task.isAllDay = previousIsAllDay;
     renderTasks(currentTasks);
     tasksStatusEl.hidden = false;
     tasksStatusEl.textContent = `Couldn't update due date for "${task.title}": ${err.message}`;
@@ -111,7 +110,60 @@ function bucketTasksByDate(tasks) {
   return { overdue, today, upcoming, noDueDate };
 }
 
-function createTaskItem(task) {
+function formatDueLabel(task, bucket) {
+  const due = new Date(task.dueDate);
+  if (bucket === 'today') {
+    return task.isAllDay ? 'All day' : due.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+  const weekday = due.toLocaleDateString([], { weekday: 'short' });
+  if (bucket === 'upcoming') {
+    if (task.isAllDay) return weekday;
+    return `${weekday} ${due.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+  }
+  return '';
+}
+
+function createDueControl(task, bucket) {
+  const control = document.createElement('span');
+  control.className = 'task-due-control';
+
+  const label = document.createElement('button');
+  label.type = 'button';
+  label.className = 'link-btn task-due-label';
+  label.textContent = bucket === 'noDueDate' ? '📅' : formatDueLabel(task, bucket);
+
+  const input = document.createElement('input');
+  input.className = 'task-due-input';
+  input.addEventListener('click', (event) => event.stopPropagation());
+
+  if (bucket === 'noDueDate') {
+    input.type = 'date';
+    input.addEventListener('change', () => {
+      if (!input.value) return;
+      updateTaskDueDate(task, `${input.value}T00:00:00.000+0000`, true);
+    });
+  } else {
+    input.type = 'datetime-local';
+    const due = new Date(task.dueDate);
+    const pad = (n) => String(n).padStart(2, '0');
+    input.value = `${due.getFullYear()}-${pad(due.getMonth() + 1)}-${pad(due.getDate())}T${pad(due.getHours())}:${pad(due.getMinutes())}`;
+    input.addEventListener('change', () => {
+      if (!input.value) return;
+      updateTaskDueDate(task, `${input.value}:00.000+0000`, false);
+    });
+  }
+
+  label.addEventListener('click', (event) => {
+    event.stopPropagation();
+    input.showPicker();
+  });
+
+  control.appendChild(label);
+  control.appendChild(input);
+  return control;
+}
+
+function createTaskItem(task, bucket) {
   const item = document.createElement('li');
   item.className = 'task-item';
   item.dataset.taskId = task.id;
@@ -144,31 +196,22 @@ function createTaskItem(task) {
   project.className = 'task-project';
   project.textContent = task.projectName;
 
-  const dateInput = document.createElement('input');
-  dateInput.type = 'date';
-  dateInput.className = 'task-due-date';
-  dateInput.value = dueDateToYMD(task.dueDate);
-  dateInput.addEventListener('click', (event) => event.stopPropagation());
-  dateInput.addEventListener('change', () => {
-    if (!dateInput.value) return;
-    updateTaskDueDate(task, dateInput.value);
-  });
-
   item.appendChild(complete);
   item.appendChild(title);
   item.appendChild(project);
-  item.appendChild(dateInput);
 
-  if (isOverdue(task)) {
+  if (bucket === 'overdue') {
     const todayBtn = document.createElement('button');
     todayBtn.type = 'button';
     todayBtn.className = 'link-btn task-today-btn';
     todayBtn.textContent = 'Today';
     todayBtn.addEventListener('click', (event) => {
       event.stopPropagation();
-      updateTaskDueDate(task, todayYMD());
+      updateTaskDueDate(task, `${todayYMD()}T00:00:00.000+0000`, true);
     });
     item.appendChild(todayBtn);
+  } else {
+    item.appendChild(createDueControl(task, bucket));
   }
 
   item.addEventListener('click', () => {
@@ -181,7 +224,7 @@ function createTaskItem(task) {
   return item;
 }
 
-function appendTaskSection(label, tasks, sectionAction) {
+function appendTaskSection(label, tasks, bucket, sectionAction) {
   if (!tasks.length) return;
 
   const heading = document.createElement('li');
@@ -193,7 +236,7 @@ function appendTaskSection(label, tasks, sectionAction) {
   taskListEl.appendChild(heading);
 
   for (const task of tasks) {
-    taskListEl.appendChild(createTaskItem(task));
+    taskListEl.appendChild(createTaskItem(task, bucket));
   }
 }
 
@@ -224,19 +267,19 @@ function renderTasks(tasks) {
     moveAllBtn.addEventListener('click', async (event) => {
       event.stopPropagation();
       moveAllBtn.disabled = true;
-      const todayDate = todayYMD();
+      const todayDate = `${todayYMD()}T00:00:00.000+0000`;
       // Sequential so a mid-batch failure doesn't leave a hard-to-reason-about
       // half-applied state and error messages don't race each other.
       for (const task of [...overdue]) {
-        await updateTaskDueDate(task, todayDate);
+        await updateTaskDueDate(task, todayDate, true);
       }
     });
   }
 
-  appendTaskSection('Overdue', overdue, moveAllBtn);
-  appendTaskSection('Today', today);
-  appendTaskSection('Upcoming', upcoming);
-  appendTaskSection('No due date', noDueDate);
+  appendTaskSection('Overdue', overdue, 'overdue', moveAllBtn);
+  appendTaskSection('Today', today, 'today');
+  appendTaskSection('Upcoming', upcoming, 'upcoming');
+  appendTaskSection('No due date', noDueDate, 'noDueDate');
   updateIdleTaskLabel();
 }
 

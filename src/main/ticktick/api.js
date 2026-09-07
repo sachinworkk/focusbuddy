@@ -52,6 +52,7 @@ async function getAllTasks() {
       projectName: project.name,
       title: task.title,
       dueDate: task.dueDate || null,
+      isAllDay: task.isAllDay || false,
       priority: task.priority,
     }))
   );
@@ -61,18 +62,15 @@ function completeTask(projectId, taskId) {
   return authedFetch(`/project/${projectId}/task/${taskId}/complete`, { method: 'POST' });
 }
 
-// Date-only edits (from an <input type="date">) can't express a specific
-// time-of-day or timeZone, so we deliberately convert the task to an
-// all-day task on the chosen date rather than guess at either.
-function updateTaskDueDate(projectId, taskId, dueDateYMD) {
+function updateTaskDueDate(projectId, taskId, dueDate, isAllDay) {
   return authedFetch(`/task/${taskId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       id: taskId,
       projectId,
-      dueDate: `${dueDateYMD}T00:00:00.000+0000`,
-      isAllDay: true,
+      dueDate,
+      isAllDay,
     }),
   });
 }
