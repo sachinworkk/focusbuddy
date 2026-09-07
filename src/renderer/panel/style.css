@@ -273,6 +273,14 @@ body.panel-visible {
   color: var(--fb-text-faint);
 }
 
+.task-day-subheading {
+  margin: var(--fb-space-2) 0 var(--fb-space-1);
+  padding: 0 var(--fb-space-3);
+  font-size: var(--fb-font-size-xs);
+  font-weight: 500;
+  color: var(--fb-text-faint);
+}
+
 .task-move-all-today-btn {
   text-transform: none;
   letter-spacing: normal;
@@ -327,13 +335,41 @@ body.panel-visible {
   white-space: nowrap;
 }
 
-.task-due-input {
+.task-due-editor {
   position: absolute;
-  inset: 0;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  margin-top: var(--fb-space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--fb-space-1);
+  padding: var(--fb-space-2);
+  background: var(--fb-surface-raised);
+  border: 1px solid var(--fb-border);
+  border-radius: var(--fb-radius-sm);
+  white-space: nowrap;
+}
+
+.task-due-input {
+  font-size: var(--fb-font-size-xs);
+  color: var(--fb-text);
+  background: var(--fb-surface);
+  border: 1px solid var(--fb-border);
+  border-radius: var(--fb-radius-sm);
+  padding: 2px 4px;
+}
+
+.task-due-ok-btn {
+  flex-shrink: 0;
+  background: var(--fb-accent);
+  color: var(--fb-bg);
+  border: none;
+  border-radius: var(--fb-radius-sm);
+  font-size: var(--fb-font-size-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  cursor: pointer;
 }
 
 .timer-task {

@@ -63,16 +63,23 @@ function todayYMD() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-async function updateTaskDueDate(task, dueDateISO, isAllDay) {
+function localDateTimeToTickTickISO(year, month, day, hour, minute) {
+  return new Date(year, month - 1, day, hour, minute).toISOString().replace('Z', '+0000');
+}
+
+async function updateTaskDueDate(task, dueDateISO, isAllDay, startDateISO = dueDateISO) {
   const previousDueDate = task.dueDate;
+  const previousStartDate = task.startDate;
   const previousIsAllDay = task.isAllDay;
   task.dueDate = dueDateISO;
+  task.startDate = startDateISO;
   task.isAllDay = isAllDay;
   renderTasks(currentTasks);
   try {
-    await window.focusbuddy.ticktick.updateDueDate(task.projectId, task.id, dueDateISO, isAllDay);
+    await window.focusbuddy.ticktick.updateDueDate(task.projectId, task.id, dueDateISO, isAllDay, startDateISO);
   } catch (err) {
     task.dueDate = previousDueDate;
+    task.startDate = previousStartDate;
     task.isAllDay = previousIsAllDay;
     renderTasks(currentTasks);
     tasksStatusEl.hidden = false;
@@ -115,12 +122,16 @@ function formatDueLabel(task, bucket) {
   if (bucket === 'today') {
     return task.isAllDay ? 'All day' : due.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   }
-  const weekday = due.toLocaleDateString([], { weekday: 'short' });
   if (bucket === 'upcoming') {
-    if (task.isAllDay) return weekday;
-    return `${weekday} ${due.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+    return task.isAllDay ? 'All day' : due.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   }
   return '';
+}
+
+function closeDueEditor(control) {
+  const editor = control.querySelector('.task-due-editor');
+  if (editor) editor.remove();
+  control.classList.remove('editing');
 }
 
 function createDueControl(task, bucket) {
@@ -132,36 +143,71 @@ function createDueControl(task, bucket) {
   label.className = 'link-btn task-due-label';
   label.textContent = bucket === 'noDueDate' ? '📅' : formatDueLabel(task, bucket);
 
-  const input = document.createElement('input');
-  input.className = 'task-due-input';
-  input.addEventListener('click', (event) => event.stopPropagation());
-
-  if (bucket === 'noDueDate') {
-    input.type = 'date';
-    input.addEventListener('change', () => {
-      if (!input.value) return;
-      updateTaskDueDate(task, `${input.value}T00:00:00.000+0000`, true);
-    });
-  } else {
-    input.type = 'datetime-local';
-    const due = new Date(task.dueDate);
-    const pad = (n) => String(n).padStart(2, '0');
-    input.value = `${due.getFullYear()}-${pad(due.getMonth() + 1)}-${pad(due.getDate())}T${pad(due.getHours())}:${pad(due.getMinutes())}`;
-    input.addEventListener('change', () => {
-      if (!input.value) return;
-      updateTaskDueDate(task, `${input.value}:00.000+0000`, false);
-    });
-  }
-
   label.addEventListener('click', (event) => {
     event.stopPropagation();
-    input.showPicker();
+    if (control.classList.contains('editing')) {
+      closeDueEditor(control);
+      return;
+    }
+
+    document.querySelectorAll('.task-due-control.editing').forEach((el) => closeDueEditor(el));
+
+    const editor = document.createElement('span');
+    editor.className = 'task-due-editor';
+    editor.addEventListener('click', (evt) => evt.stopPropagation());
+
+    const input = document.createElement('input');
+    input.className = 'task-due-input';
+
+    const okBtn = document.createElement('button');
+    okBtn.type = 'button';
+    okBtn.className = 'task-due-ok-btn';
+    okBtn.textContent = 'OK';
+
+    if (bucket === 'noDueDate') {
+      input.type = 'date';
+      okBtn.addEventListener('click', () => {
+        if (!input.value) return;
+        const [year, month, day] = input.value.split('-').map(Number);
+        const iso = localDateTimeToTickTickISO(year, month, day, 0, 0);
+        updateTaskDueDate(task, iso, true, iso);
+        closeDueEditor(control);
+      });
+    } else {
+      input.type = 'datetime-local';
+      const due = new Date(task.dueDate);
+      const pad = (n) => String(n).padStart(2, '0');
+      input.value = `${due.getFullYear()}-${pad(due.getMonth() + 1)}-${pad(due.getDate())}T${pad(due.getHours())}:${pad(due.getMinutes())}`;
+      okBtn.addEventListener('click', () => {
+        if (!input.value) return;
+        const [datePart, timePart] = input.value.split('T');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hour, minute] = timePart.split(':').map(Number);
+        const iso = localDateTimeToTickTickISO(year, month, day, hour, minute);
+        updateTaskDueDate(task, iso, false, iso);
+        closeDueEditor(control);
+      });
+    }
+
+    input.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Enter') okBtn.click();
+      if (evt.key === 'Escape') closeDueEditor(control);
+    });
+
+    editor.appendChild(input);
+    editor.appendChild(okBtn);
+    control.appendChild(editor);
+    control.classList.add('editing');
+    input.focus();
   });
 
   control.appendChild(label);
-  control.appendChild(input);
   return control;
 }
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.task-due-control.editing').forEach((el) => closeDueEditor(el));
+});
 
 function createTaskItem(task, bucket) {
   const item = document.createElement('li');
@@ -240,6 +286,31 @@ function appendTaskSection(label, tasks, bucket, sectionAction) {
   }
 }
 
+function appendUpcomingSection(tasks) {
+  if (!tasks.length) return;
+
+  const heading = document.createElement('li');
+  heading.className = 'task-section-title';
+  const labelSpan = document.createElement('span');
+  labelSpan.textContent = `Upcoming (${tasks.length})`;
+  heading.appendChild(labelSpan);
+  taskListEl.appendChild(heading);
+
+  let currentDayKey = null;
+  for (const task of tasks) {
+    const due = new Date(task.dueDate);
+    const dayKey = due.toDateString();
+    if (dayKey !== currentDayKey) {
+      currentDayKey = dayKey;
+      const daySubheading = document.createElement('li');
+      daySubheading.className = 'task-day-subheading';
+      daySubheading.textContent = due.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+      taskListEl.appendChild(daySubheading);
+    }
+    taskListEl.appendChild(createTaskItem(task, 'upcoming'));
+  }
+}
+
 function renderTasks(tasks) {
   currentTasks = tasks;
   taskListEl.innerHTML = '';
@@ -278,7 +349,7 @@ function renderTasks(tasks) {
 
   appendTaskSection('Overdue', overdue, 'overdue', moveAllBtn);
   appendTaskSection('Today', today, 'today');
-  appendTaskSection('Upcoming', upcoming, 'upcoming');
+  appendUpcomingSection(upcoming);
   appendTaskSection('No due date', noDueDate, 'noDueDate');
   updateIdleTaskLabel();
 }

@@ -62,13 +62,14 @@ function completeTask(projectId, taskId) {
   return authedFetch(`/project/${projectId}/task/${taskId}/complete`, { method: 'POST' });
 }
 
-function updateTaskDueDate(projectId, taskId, dueDate, isAllDay) {
+function updateTaskDueDate(projectId, taskId, dueDate, isAllDay, startDate = dueDate) {
   return authedFetch(`/task/${taskId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       id: taskId,
       projectId,
+      startDate,
       dueDate,
       isAllDay,
     }),
