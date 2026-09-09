@@ -120,6 +120,24 @@ function registerIpcHandlers() {
     return true;
   });
 
+  ipcMain.handle('ticktick:get-projects', () => {
+    return ticktickApi.getProjects();
+  });
+
+  ipcMain.handle('ticktick:create-task', async (event, { title, projectId }) => {
+    return ticktickApi.createTask({ title, projectId });
+  });
+
+  ipcMain.handle('ticktick:update-task', async (event, { taskId, currentProjectId, title, projectId }) => {
+    await ticktickApi.updateTask(taskId, currentProjectId, { title, projectId });
+    return true;
+  });
+
+  ipcMain.handle('ticktick:delete-task', async (event, { projectId, taskId }) => {
+    await ticktickApi.deleteTask(projectId, taskId);
+    return true;
+  });
+
   ipcMain.on('avatar:set-overdue-state', (event, overdue) => {
     const widget = getWidgetWindow();
     if (widget && !widget.isDestroyed()) {

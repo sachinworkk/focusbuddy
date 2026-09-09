@@ -197,6 +197,12 @@ body.panel-visible {
   margin: 0;
 }
 
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--fb-space-3);
+}
+
 .link-btn {
   background: none;
   border: none;
@@ -270,6 +276,8 @@ body.panel-visible {
   border-radius: var(--fb-radius-sm);
   cursor: pointer;
   font-size: var(--fb-font-size-sm);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .task-section-title {
@@ -342,6 +350,14 @@ body.panel-visible {
 
 .task-today-btn {
   flex-shrink: 0;
+}
+
+.task-form-modal {
+  max-width: 320px;
+}
+
+.task-form-project-select {
+  cursor: pointer;
 }
 
 .task-due-control {
@@ -421,6 +437,10 @@ body.panel-visible {
   gap: var(--fb-space-2);
 }
 
+.task-due-modal-actions--split {
+  justify-content: space-between;
+}
+
 .task-due-modal-main-actions {
   display: flex;
   align-items: center;
@@ -434,6 +454,67 @@ body.panel-visible {
 .task-due-ok-btn {
   flex-shrink: 0;
   background: var(--fb-accent);
+  color: var(--fb-bg);
+  border: none;
+  border-radius: var(--fb-radius-sm);
+  font-size: var(--fb-font-size-xs);
+  font-weight: 600;
+  padding: var(--fb-space-1) var(--fb-space-3);
+  cursor: pointer;
+}
+
+.task-form-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fb-space-2);
+}
+
+.task-form-title-row .task-due-modal-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-form-delete-icon-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--fb-text-muted);
+  font-size: var(--fb-font-size-sm);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--fb-radius-sm);
+  cursor: pointer;
+}
+
+.task-form-delete-icon-btn:hover {
+  background: var(--fb-surface-raised);
+  color: #e0655a;
+}
+
+.task-form-delete-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--fb-space-4);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.task-form-delete-modal {
+  max-width: 220px;
+}
+
+.task-form-delete-confirm-msg {
+  font-size: var(--fb-font-size-xs);
+  color: var(--fb-text-muted);
+}
+
+.task-form-delete-confirm-btn {
+  flex-shrink: 0;
+  background: #e0655a;
   color: var(--fb-bg);
   border: none;
   border-radius: var(--fb-radius-sm);
