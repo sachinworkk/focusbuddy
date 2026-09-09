@@ -115,8 +115,12 @@ function bucketTasksByDate(tasks) {
       continue;
     }
     const due = new Date(task.dueDate);
+    const start = task.startDate ? new Date(task.startDate) : null;
+    const isActiveRange = start && start < startOfTomorrow && due >= startOfToday;
+
     if (due < startOfToday) overdue.push(task);
     else if (due < startOfTomorrow) today.push(task);
+    else if (isActiveRange) today.push(task);
     else upcoming.push(task);
   }
 
@@ -131,6 +135,14 @@ function bucketTasksByDate(tasks) {
 function formatDueLabel(task, bucket) {
   const due = new Date(task.dueDate);
   if (bucket === 'today') {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfToday.getDate() + 1);
+    const dueIsToday = due >= startOfToday && due < startOfTomorrow;
+    if (!dueIsToday) {
+      return `Due ${due.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
+    }
     return task.isAllDay ? 'All day' : due.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   }
   if (bucket === 'upcoming') {
