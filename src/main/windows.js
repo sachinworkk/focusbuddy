@@ -3,7 +3,7 @@ const { BrowserWindow, screen, app } = require('electron');
 const { getWidgetPosition, setWidgetPosition } = require('./store');
 
 const WIDGET_SIZE = 120;
-const PANEL_SIZE = { width: 340, height: 460 };
+const PANEL_SIZE = { width: 340, height: 560 };
 
 let widgetWindow = null;
 let panelWindow = null;
