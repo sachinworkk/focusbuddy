@@ -353,7 +353,53 @@ body.panel-visible {
 }
 
 .task-form-modal {
+  width: 320px;
   max-width: 320px;
+}
+
+.btn-spinner {
+  display: none;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: fb-spin 0.6s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes fb-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.is-loading {
+  cursor: default;
+  pointer-events: none;
+}
+
+.is-loading .btn-label-text {
+  visibility: hidden;
+}
+
+.is-loading .btn-spinner {
+  display: inline-block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.task-due-ok-btn,
+.task-form-delete-confirm-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .task-form-project-select {

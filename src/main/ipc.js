@@ -124,8 +124,8 @@ function registerIpcHandlers() {
     return ticktickApi.getProjects();
   });
 
-  ipcMain.handle('ticktick:create-task', async (event, { title, projectId }) => {
-    return ticktickApi.createTask({ title, projectId });
+  ipcMain.handle('ticktick:create-task', async (event, { title, projectId, dueDate, isAllDay, startDate }) => {
+    return ticktickApi.createTask({ title, projectId, dueDate, isAllDay, startDate });
   });
 
   ipcMain.handle('ticktick:update-task', async (event, { taskId, currentProjectId, title, projectId }) => {

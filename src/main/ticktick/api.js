@@ -83,12 +83,16 @@ function resolveProjectId(projectId) {
   return projectId === INBOX_PROJECT.id ? getInboxProjectId() : Promise.resolve(projectId);
 }
 
-async function createTask({ title, projectId }) {
+async function createTask({ title, projectId, dueDate, isAllDay, startDate }) {
   const resolvedProjectId = await resolveProjectId(projectId);
+  const body = { title, projectId: resolvedProjectId };
+  if (dueDate !== undefined) body.dueDate = dueDate;
+  if (isAllDay !== undefined) body.isAllDay = isAllDay;
+  if (startDate !== undefined) body.startDate = startDate;
   return authedFetch('/task', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, projectId: resolvedProjectId }),
+    body: JSON.stringify(body),
   });
 }
 
