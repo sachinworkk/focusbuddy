@@ -7,6 +7,7 @@ const avatar = document.getElementById('avatar');
 // opens the panel.
 const DRAG_THRESHOLD = 4;
 let drag = null;
+let isDragging = false;
 
 avatar.addEventListener('mousedown', (event) => {
   drag = {
@@ -29,6 +30,8 @@ window.addEventListener('mousemove', (event) => {
   const dy = event.screenY - drag.startScreenY;
   if (!drag.moved && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
     drag.moved = true;
+    isDragging = true;
+    render();
   }
   if (drag.moved && drag.winX !== null) {
     window.focusbuddy.move(drag.winX + dx, drag.winY + dy);
@@ -40,6 +43,10 @@ window.addEventListener('mouseup', () => {
     window.focusbuddy.togglePanel();
   }
   drag = null;
+  if (isDragging) {
+    isDragging = false;
+    render();
+  }
 });
 
 const progressRingCircle = document.querySelector('.progress-ring-circle');
@@ -47,6 +54,18 @@ const RING_CIRCUMFERENCE = 301.59;
 
 let timerState = { status: 'idle', durationSeconds: 0, remainingSeconds: 0 };
 let hasOverdueTask = false;
+let isHovering = false;
+let bubbleShown = false;
+
+avatar.addEventListener('mouseenter', () => {
+  isHovering = true;
+  render();
+});
+
+avatar.addEventListener('mouseleave', () => {
+  isHovering = false;
+  render();
+});
 
 function moodFor(state, overdue) {
   if (state.status === 'running') return 'focused';
@@ -64,7 +83,18 @@ function render() {
   avatar.dataset.mood = mood;
 
   const taskTitle = timerState.task?.title;
-  avatar.title = (mood === 'focused' || mood === 'celebrating') && taskTitle ? taskTitle : '';
+  const shouldShowBubble = mood === 'focused' && Boolean(taskTitle) && isHovering && !isDragging;
+
+  // The bubble lives in its own overlay window (see src/main/windows.js),
+  // so it can be positioned/flipped near screen edges without resizing or
+  // shifting the widget window itself — which would eat into drag range.
+  if (shouldShowBubble) {
+    window.focusbuddy.bubble.show(taskTitle);
+    bubbleShown = true;
+  } else if (bubbleShown) {
+    window.focusbuddy.bubble.hide();
+    bubbleShown = false;
+  }
 }
 
 function updateTimerDisplay(state) {
