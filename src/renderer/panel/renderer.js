@@ -2,6 +2,7 @@ const ticktickStatusEl = document.getElementById('ticktick-status');
 const connectBtn = document.getElementById('ticktick-connect-btn');
 const logoutBtn = document.getElementById('ticktick-logout-btn');
 const refreshTasksBtn = document.getElementById('refresh-tasks-btn');
+const addTaskBtn = document.getElementById('add-task-btn');
 const tasksStatusEl = document.getElementById('tasks-status');
 const taskListEl = document.getElementById('task-list');
 const timerTaskEl = document.getElementById('timer-task');
@@ -27,6 +28,15 @@ const settingsToggleBtn = document.getElementById('settings-toggle-btn');
 let selectedTaskId = null;
 let currentTasks = [];
 let currentTimerState = null;
+let cachedProjects = null;
+
+async function getProjectOptions() {
+  if (!cachedProjects) {
+    const projects = await window.focusbuddy.ticktick.getProjects();
+    cachedProjects = [{ id: 'inbox', name: 'Inbox' }, ...projects];
+  }
+  return cachedProjects;
+}
 
 function updateIdleTaskLabel() {
   if (currentTimerState && currentTimerState.status !== 'idle') return;
@@ -39,6 +49,7 @@ function renderConnected(connected) {
   connectBtn.hidden = connected;
   logoutBtn.hidden = !connected;
   refreshTasksBtn.hidden = !connected;
+  addTaskBtn.hidden = !connected;
 
   if (!connected) {
     taskListEl.hidden = true;
@@ -295,6 +306,184 @@ document.addEventListener('click', () => {
   document.querySelectorAll('.task-due-control.editing').forEach((el) => closeDueEditor(el));
 });
 
+function closeTaskFormEditor() {
+  const backdrop = document.querySelector('.task-form-modal-backdrop');
+  if (backdrop) backdrop.remove();
+}
+
+async function openTaskFormModal({ heading, initialTitle, initialProjectId, submitLabel, onSubmit, onDelete }) {
+  document.querySelectorAll('.task-due-control.editing').forEach((el) => closeDueEditor(el));
+  closeTaskFormEditor();
+
+  const projects = await getProjectOptions();
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'task-due-modal-backdrop task-form-modal-backdrop';
+  backdrop.addEventListener('click', closeTaskFormEditor);
+
+  const editor = document.createElement('div');
+  editor.className = 'task-due-modal task-form-modal';
+  editor.addEventListener('click', (evt) => evt.stopPropagation());
+
+  const titleRow = document.createElement('div');
+  titleRow.className = 'task-form-title-row';
+
+  const title = document.createElement('div');
+  title.className = 'task-due-modal-title';
+  title.textContent = heading;
+  titleRow.appendChild(title);
+
+  if (onDelete) {
+    const deleteIconBtn = document.createElement('button');
+    deleteIconBtn.type = 'button';
+    deleteIconBtn.className = 'task-form-delete-icon-btn';
+    deleteIconBtn.setAttribute('aria-label', 'Delete task');
+    deleteIconBtn.textContent = '🗑';
+    deleteIconBtn.addEventListener('click', () => openDeleteConfirmModal());
+    titleRow.appendChild(deleteIconBtn);
+  }
+
+  editor.appendChild(titleRow);
+
+  const titleField = document.createElement('div');
+  titleField.className = 'task-due-field';
+  const titleInput = document.createElement('input');
+  titleInput.type = 'text';
+  titleInput.className = 'task-due-input task-form-title-input';
+  titleInput.value = initialTitle || '';
+  titleInput.placeholder = 'Task title';
+  titleField.appendChild(titleInput);
+  editor.appendChild(titleField);
+
+  const projectField = document.createElement('div');
+  projectField.className = 'task-due-field';
+  const projectSelect = document.createElement('select');
+  projectSelect.className = 'task-due-input task-form-project-select';
+  for (const p of projects) {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name;
+    if (p.id === initialProjectId) opt.selected = true;
+    projectSelect.appendChild(opt);
+  }
+  projectField.appendChild(projectSelect);
+  editor.appendChild(projectField);
+
+  const actions = document.createElement('div');
+  actions.className = 'task-due-modal-actions';
+  const mainActions = document.createElement('div');
+  mainActions.className = 'task-due-modal-main-actions';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'link-btn task-due-cancel-btn';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', closeTaskFormEditor);
+
+  const okBtn = document.createElement('button');
+  okBtn.type = 'button';
+  okBtn.className = 'task-due-ok-btn';
+  okBtn.textContent = submitLabel;
+  okBtn.addEventListener('click', async () => {
+    const titleValue = titleInput.value.trim();
+    if (!titleValue) return;
+    okBtn.disabled = true;
+    try {
+      await onSubmit({ title: titleValue, projectId: projectSelect.value });
+      closeTaskFormEditor();
+    } catch (err) {
+      okBtn.disabled = false;
+      tasksStatusEl.hidden = false;
+      tasksStatusEl.textContent = `Couldn't save task: ${err.message}`;
+    }
+  });
+
+  titleInput.addEventListener('keydown', (evt) => {
+    if (evt.key === 'Enter') okBtn.click();
+    if (evt.key === 'Escape') closeTaskFormEditor();
+  });
+
+  mainActions.appendChild(cancelBtn);
+  mainActions.appendChild(okBtn);
+
+  actions.appendChild(mainActions);
+  editor.appendChild(actions);
+
+  function openDeleteConfirmModal() {
+    const confirmBackdrop = document.createElement('div');
+    confirmBackdrop.className = 'task-form-delete-modal-backdrop';
+    confirmBackdrop.addEventListener('click', () => confirmBackdrop.remove());
+
+    const confirmModal = document.createElement('div');
+    confirmModal.className = 'task-due-modal task-form-delete-modal';
+    confirmModal.addEventListener('click', (evt) => evt.stopPropagation());
+
+    const confirmMsg = document.createElement('div');
+    confirmMsg.className = 'task-form-delete-confirm-msg';
+    confirmMsg.textContent = "Delete this task? This can't be undone.";
+    confirmModal.appendChild(confirmMsg);
+
+    const confirmActions = document.createElement('div');
+    confirmActions.className = 'task-due-modal-actions';
+
+    const confirmCancelBtn = document.createElement('button');
+    confirmCancelBtn.type = 'button';
+    confirmCancelBtn.className = 'link-btn task-due-cancel-btn';
+    confirmCancelBtn.textContent = 'Cancel';
+    confirmCancelBtn.addEventListener('click', () => confirmBackdrop.remove());
+
+    const confirmDeleteBtn = document.createElement('button');
+    confirmDeleteBtn.type = 'button';
+    confirmDeleteBtn.className = 'task-form-delete-confirm-btn';
+    confirmDeleteBtn.textContent = 'Delete';
+    confirmDeleteBtn.addEventListener('click', async () => {
+      confirmDeleteBtn.disabled = true;
+      confirmCancelBtn.disabled = true;
+      try {
+        await onDelete();
+        confirmBackdrop.remove();
+        closeTaskFormEditor();
+      } catch (err) {
+        confirmDeleteBtn.disabled = false;
+        confirmCancelBtn.disabled = false;
+        tasksStatusEl.hidden = false;
+        tasksStatusEl.textContent = `Couldn't delete task: ${err.message}`;
+      }
+    });
+
+    confirmActions.appendChild(confirmCancelBtn);
+    confirmActions.appendChild(confirmDeleteBtn);
+    confirmModal.appendChild(confirmActions);
+    confirmBackdrop.appendChild(confirmModal);
+    document.body.appendChild(confirmBackdrop);
+  }
+
+  backdrop.appendChild(editor);
+  document.body.appendChild(backdrop);
+  titleInput.focus();
+}
+
+function openEditTaskModal(task) {
+  openTaskFormModal({
+    heading: 'Edit task',
+    initialTitle: task.title,
+    initialProjectId: task.projectId,
+    submitLabel: 'Save',
+    onSubmit: async ({ title, projectId }) => {
+      await window.focusbuddy.ticktick.updateTask(task.id, task.projectId, {
+        title: title !== task.title ? title : undefined,
+        projectId: projectId !== task.projectId ? projectId : undefined,
+      });
+      await loadTasks();
+    },
+    onDelete: async () => {
+      await window.focusbuddy.ticktick.deleteTask(task.projectId, task.id);
+      if (task.id === selectedTaskId) selectedTaskId = null;
+      await loadTasks();
+    },
+  });
+}
+
 function createTaskItem(task, bucket) {
   const item = document.createElement('li');
   item.className = 'task-item';
@@ -355,6 +544,11 @@ function createTaskItem(task, bucket) {
     selectedTaskId = task.id === selectedTaskId ? null : task.id;
     renderTasks(currentTasks);
     updateIdleTaskLabel();
+  });
+
+  item.addEventListener('dblclick', (event) => {
+    event.stopPropagation();
+    openEditTaskModal(task);
   });
 
   return item;
@@ -478,10 +672,24 @@ connectBtn.addEventListener('click', async () => {
 
 logoutBtn.addEventListener('click', async () => {
   await window.focusbuddy.ticktick.logout();
+  cachedProjects = null;
   await refreshConnectionState();
 });
 
 refreshTasksBtn.addEventListener('click', loadTasks);
+
+addTaskBtn.addEventListener('click', () => {
+  openTaskFormModal({
+    heading: 'Add task',
+    initialTitle: '',
+    initialProjectId: 'inbox',
+    submitLabel: 'Add',
+    onSubmit: async ({ title, projectId }) => {
+      await window.focusbuddy.ticktick.createTask(title, projectId);
+      await loadTasks();
+    },
+  });
+});
 
 function formatTime(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60);

@@ -62,6 +62,64 @@ function completeTask(projectId, taskId) {
   return authedFetch(`/project/${projectId}/task/${taskId}/complete`, { method: 'POST' });
 }
 
+// The INBOX_PROJECT.id sentinel ('inbox') is only valid as a projectId for
+// GET /project/{projectId}/data. Write endpoints need TickTick's real inbox
+// project id (form "inbox<numericUserId>"), which we read off any task
+// returned from the inbox data endpoint.
+let cachedInboxProjectId = null;
+
+async function getInboxProjectId() {
+  if (cachedInboxProjectId) return cachedInboxProjectId;
+  const data = await getProjectData(INBOX_PROJECT.id);
+  const realId = data?.tasks?.[0]?.projectId;
+  if (!realId) {
+    throw new Error('Could not resolve TickTick inbox project id (inbox is empty)');
+  }
+  cachedInboxProjectId = realId;
+  return cachedInboxProjectId;
+}
+
+function resolveProjectId(projectId) {
+  return projectId === INBOX_PROJECT.id ? getInboxProjectId() : Promise.resolve(projectId);
+}
+
+async function createTask({ title, projectId }) {
+  const resolvedProjectId = await resolveProjectId(projectId);
+  return authedFetch('/task', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, projectId: resolvedProjectId }),
+  });
+}
+
+async function updateTask(taskId, currentProjectId, { title, projectId } = {}) {
+  const resolvedCurrentProjectId = await resolveProjectId(currentProjectId);
+
+  if (title !== undefined) {
+    await authedFetch(`/task/${taskId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: taskId, projectId: resolvedCurrentProjectId, title }),
+    });
+  }
+
+  if (projectId !== undefined && projectId !== currentProjectId) {
+    const resolvedNewProjectId = await resolveProjectId(projectId);
+    await authedFetch('/task/move', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify([
+        { fromProjectId: resolvedCurrentProjectId, toProjectId: resolvedNewProjectId, taskId },
+      ]),
+    });
+  }
+}
+
+async function deleteTask(projectId, taskId) {
+  const resolvedProjectId = await resolveProjectId(projectId);
+  return authedFetch(`/project/${resolvedProjectId}/task/${taskId}`, { method: 'DELETE' });
+}
+
 function updateTaskDueDate(projectId, taskId, dueDate, isAllDay, startDate = dueDate) {
   return authedFetch(`/task/${taskId}`, {
     method: 'POST',
@@ -97,4 +155,7 @@ module.exports = {
   completeTask,
   updateTaskDueDate,
   createFocusRecord,
+  createTask,
+  updateTask,
+  deleteTask,
 };
