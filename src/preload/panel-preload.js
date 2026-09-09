@@ -18,7 +18,13 @@ contextBridge.exposeInMainWorld('focusbuddy', {
     updateDueDate: (projectId, taskId, dueDate, isAllDay, startDate) =>
       ipcRenderer.invoke('ticktick:update-due-date', { projectId, taskId, dueDate, isAllDay, startDate }),
     getProjects: () => ipcRenderer.invoke('ticktick:get-projects'),
-    createTask: (title, projectId) => ipcRenderer.invoke('ticktick:create-task', { title, projectId }),
+    createTask: (title, projectId, due) => ipcRenderer.invoke('ticktick:create-task', {
+      title,
+      projectId,
+      dueDate: due ? due.dueDateISO : undefined,
+      isAllDay: due ? due.isAllDay : undefined,
+      startDate: due ? due.startDateISO : undefined,
+    }),
     updateTask: (taskId, currentProjectId, { title, projectId } = {}) =>
       ipcRenderer.invoke('ticktick:update-task', { taskId, currentProjectId, title, projectId }),
     deleteTask: (projectId, taskId) => ipcRenderer.invoke('ticktick:delete-task', { projectId, taskId }),
