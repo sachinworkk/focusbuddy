@@ -4,6 +4,10 @@ contextBridge.exposeInMainWorld('focusbuddy', {
   togglePanel: () => ipcRenderer.send('widget:toggle-panel'),
   getPosition: () => ipcRenderer.invoke('widget:get-position'),
   move: (x, y) => ipcRenderer.send('widget:move', x, y),
+  bubble: {
+    show: (text) => ipcRenderer.send('widget:bubble-show', text),
+    hide: () => ipcRenderer.send('widget:bubble-hide'),
+  },
   timer: {
     getState: () => ipcRenderer.invoke('timer:get-state'),
     onState: (callback) => {

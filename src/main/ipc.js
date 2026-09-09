@@ -1,5 +1,5 @@
 const { ipcMain } = require('electron');
-const { togglePanelWindow, getWidgetWindow, getPanelWindow } = require('./windows');
+const { togglePanelWindow, getWidgetWindow, getPanelWindow, showBubble, hideBubble } = require('./windows');
 const ticktickAuth = require('./ticktick/auth');
 const ticktickApi = require('./ticktick/api');
 const timer = require('./timer');
@@ -85,6 +85,14 @@ function registerIpcHandlers() {
   ipcMain.on('widget:move', (event, x, y) => {
     const widget = getWidgetWindow();
     if (widget) widget.setPosition(Math.round(x), Math.round(y));
+  });
+
+  ipcMain.on('widget:bubble-show', (event, text) => {
+    showBubble(text);
+  });
+
+  ipcMain.on('widget:bubble-hide', () => {
+    hideBubble();
   });
 
   ipcMain.on('panel:hide', () => {
