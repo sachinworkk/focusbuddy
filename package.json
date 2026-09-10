@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
+    "dev": "nodemon --watch src --ext js,html,css,json --exec \"electron .\"",
     "build": "electron-builder --linux"
   },
   "dependencies": {
@@ -13,7 +14,15 @@
   },
   "devDependencies": {
     "electron": "^32.0.0",
-    "electron-builder": "^25.0.0"
+    "electron-builder": "^25.0.0",
+    "nodemon": "^3.1.14"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "node_modules",
+      "dist",
+      "src/extension"
+    ]
   },
   "build": {
     "appId": "com.focusbuddy.app",
