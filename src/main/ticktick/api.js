@@ -52,6 +52,7 @@ async function getAllTasks() {
       projectName: project.name,
       title: task.title,
       dueDate: task.dueDate || null,
+      startDate: task.startDate || null,
       isAllDay: task.isAllDay || false,
       priority: task.priority,
     }))
