@@ -29,6 +29,7 @@ let selectedTaskId = null;
 let currentTasks = [];
 let currentTimerState = null;
 let cachedProjects = null;
+let subtaskDialogTaskId = null;
 
 async function getProjectOptions() {
   if (!cachedProjects) {
@@ -514,6 +515,133 @@ function openEditTaskModal(task) {
   });
 }
 
+function closeTaskMenu() {
+  const menu = document.querySelector('.task-menu-dropdown');
+  if (menu) menu.remove();
+}
+
+document.addEventListener('click', closeTaskMenu);
+
+function createTaskMenuButton(task) {
+  const wrap = document.createElement('span');
+  wrap.className = 'task-menu';
+
+  const menuBtn = document.createElement('button');
+  menuBtn.type = 'button';
+  menuBtn.className = 'task-menu-btn';
+  menuBtn.setAttribute('aria-label', 'Task options');
+  menuBtn.textContent = '⋯';
+
+  menuBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const alreadyOpen = wrap.querySelector('.task-menu-dropdown');
+    closeTaskMenu();
+    if (alreadyOpen) return;
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'task-menu-dropdown';
+    dropdown.addEventListener('click', (evt) => evt.stopPropagation());
+
+    const editItem = document.createElement('button');
+    editItem.type = 'button';
+    editItem.className = 'task-menu-item';
+    editItem.textContent = 'Edit';
+    editItem.addEventListener('click', () => {
+      closeTaskMenu();
+      openEditTaskModal(task);
+    });
+
+    const deleteItem = document.createElement('button');
+    deleteItem.type = 'button';
+    deleteItem.className = 'task-menu-item task-menu-item-danger';
+    deleteItem.textContent = 'Delete';
+    deleteItem.addEventListener('click', async () => {
+      closeTaskMenu();
+      try {
+        await window.focusbuddy.ticktick.deleteTask(task.projectId, task.id);
+        if (task.id === selectedTaskId) selectedTaskId = null;
+        loadTasks();
+      } catch (err) {
+        tasksStatusEl.hidden = false;
+        tasksStatusEl.textContent = `Couldn't delete task: ${err.message}`;
+      }
+    });
+
+    dropdown.appendChild(editItem);
+    dropdown.appendChild(deleteItem);
+    wrap.appendChild(dropdown);
+  });
+
+  wrap.appendChild(menuBtn);
+  return wrap;
+}
+
+function closeSubtaskDialog() {
+  const backdrop = document.querySelector('.subtask-dialog-backdrop');
+  if (backdrop) backdrop.remove();
+  subtaskDialogTaskId = null;
+}
+
+function openSubtaskDialog(task) {
+  document.querySelectorAll('.task-due-control.editing').forEach((el) => closeDueEditor(el));
+  closeTaskFormEditor();
+  closeSubtaskDialog();
+  subtaskDialogTaskId = task.id;
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'task-due-modal-backdrop subtask-dialog-backdrop';
+  backdrop.addEventListener('click', closeSubtaskDialog);
+
+  const dialog = document.createElement('div');
+  dialog.className = 'task-due-modal subtask-dialog';
+  dialog.addEventListener('click', (evt) => evt.stopPropagation());
+
+  const titleRow = document.createElement('div');
+  titleRow.className = 'task-form-title-row';
+
+  const title = document.createElement('div');
+  title.className = 'task-due-modal-title';
+  title.textContent = task.title;
+  titleRow.appendChild(title);
+  titleRow.appendChild(createTaskMenuButton(task));
+
+  dialog.appendChild(titleRow);
+
+  const subtaskList = document.createElement('ul');
+  subtaskList.className = 'subtask-list subtask-dialog-list';
+  for (const subtask of task.subtasks || []) {
+    subtaskList.appendChild(createSubtaskItem(task, subtask));
+  }
+
+  const addSubtaskRow = document.createElement('li');
+  addSubtaskRow.className = 'subtask-add-row';
+  const addSubtaskBtn = document.createElement('button');
+  addSubtaskBtn.type = 'button';
+  addSubtaskBtn.className = 'link-btn subtask-add-btn';
+  addSubtaskBtn.textContent = '+ Add subtask';
+  addSubtaskBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    startAddSubtask(task, subtaskList, addSubtaskRow);
+  });
+  addSubtaskRow.appendChild(addSubtaskBtn);
+  subtaskList.appendChild(addSubtaskRow);
+
+  dialog.appendChild(subtaskList);
+
+  const actions = document.createElement('div');
+  actions.className = 'task-due-modal-actions';
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'link-btn task-due-cancel-btn';
+  closeBtn.textContent = 'Close';
+  closeBtn.addEventListener('click', closeSubtaskDialog);
+  actions.appendChild(closeBtn);
+  dialog.appendChild(actions);
+
+  backdrop.appendChild(dialog);
+  document.body.appendChild(backdrop);
+}
+
 function createSubtaskItem(task, subtask) {
   const subtaskItem = document.createElement('li');
   subtaskItem.className = 'subtask-item';
@@ -533,6 +661,7 @@ function createSubtaskItem(task, subtask) {
       if (subtask.id === selectedTaskId) selectedTaskId = null;
       task.subtasks = task.subtasks.filter((s) => s.id !== subtask.id);
       renderTasks(currentTasks);
+      syncOpenSubtaskDialog();
     } catch (err) {
       checkbox.checked = false;
       checkbox.disabled = false;
@@ -570,7 +699,7 @@ function createSubtaskItem(task, subtask) {
   subtaskItem.addEventListener('click', () => {
     window.focusbuddySounds.select();
     selectedTaskId = subtask.id === selectedTaskId ? null : subtask.id;
-    renderTasks(currentTasks);
+    subtaskItem.classList.toggle('selected', subtask.id === selectedTaskId);
     updateIdleTaskLabel();
   });
 
@@ -701,6 +830,16 @@ function createTaskItem(task, bucket) {
   const title = document.createElement('span');
   title.className = 'task-title';
   title.textContent = task.title;
+  if (task.subtasks && task.subtasks.length) {
+    const count = document.createElement('span');
+    count.className = 'task-subtask-count';
+    count.textContent = ` (${task.subtasks.filter((s) => !s.completed).length}/${task.subtasks.length})`;
+    title.appendChild(count);
+  }
+  title.addEventListener('click', (event) => {
+    event.stopPropagation();
+    openSubtaskDialog(task);
+  });
 
   const project = document.createElement('span');
   project.className = 'task-project';
@@ -729,37 +868,11 @@ function createTaskItem(task, bucket) {
   row.appendChild(meta);
   item.appendChild(row);
 
-  const subtaskList = document.createElement('ul');
-  subtaskList.className = 'subtask-list';
-  for (const subtask of task.subtasks || []) {
-    subtaskList.appendChild(createSubtaskItem(task, subtask));
-  }
-
-  const addSubtaskRow = document.createElement('li');
-  addSubtaskRow.className = 'subtask-add-row';
-  const addSubtaskBtn = document.createElement('button');
-  addSubtaskBtn.type = 'button';
-  addSubtaskBtn.className = 'link-btn subtask-add-btn';
-  addSubtaskBtn.textContent = '+ Add subtask';
-  addSubtaskBtn.addEventListener('click', (event) => {
-    event.stopPropagation();
-    startAddSubtask(task, subtaskList, addSubtaskRow);
-  });
-  addSubtaskRow.appendChild(addSubtaskBtn);
-  subtaskList.appendChild(addSubtaskRow);
-
-  item.appendChild(subtaskList);
-
   row.addEventListener('click', () => {
     window.focusbuddySounds.select();
     selectedTaskId = task.id === selectedTaskId ? null : task.id;
     renderTasks(currentTasks);
     updateIdleTaskLabel();
-  });
-
-  row.addEventListener('dblclick', (event) => {
-    event.stopPropagation();
-    openEditTaskModal(task);
   });
 
   return item;
@@ -857,9 +970,17 @@ async function loadTasks() {
   try {
     const tasks = await window.focusbuddy.ticktick.getTasks();
     renderTasks(tasks);
+    syncOpenSubtaskDialog();
   } catch (err) {
     tasksStatusEl.textContent = `Couldn't load tasks: ${err.message}`;
   }
+}
+
+function syncOpenSubtaskDialog() {
+  if (!subtaskDialogTaskId || !document.querySelector('.subtask-dialog-backdrop')) return;
+  const task = currentTasks.find((t) => t.id === subtaskDialogTaskId);
+  if (task) openSubtaskDialog(task);
+  else closeSubtaskDialog();
 }
 
 async function refreshConnectionState() {
