@@ -424,6 +424,80 @@ body.panel-visible {
   word-break: normal;
   overflow-wrap: normal;
   white-space: normal;
+  cursor: pointer;
+}
+
+.task-title:hover {
+  text-decoration: underline;
+}
+
+.task-subtask-count {
+  color: var(--fb-text-faint);
+  font-size: var(--fb-font-size-xs);
+}
+
+.task-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.task-menu-btn {
+  background: none;
+  border: none;
+  color: var(--fb-text-faint);
+  font-size: var(--fb-font-size-sm);
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.2em;
+}
+
+.task-menu-btn:hover {
+  color: var(--fb-text);
+}
+
+.task-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 100px;
+  padding: var(--fb-space-1);
+  background: var(--fb-surface-raised);
+  border: 1px solid var(--fb-border);
+  border-radius: var(--fb-radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.task-menu-item {
+  background: none;
+  border: none;
+  color: var(--fb-text);
+  font-size: var(--fb-font-size-xs);
+  text-align: left;
+  padding: var(--fb-space-1) var(--fb-space-2);
+  border-radius: var(--fb-radius-sm);
+  cursor: pointer;
+}
+
+.task-menu-item:hover {
+  background: var(--fb-surface);
+}
+
+.task-menu-item-danger {
+  color: #e0655a;
+}
+
+.subtask-dialog {
+  width: 300px;
+  max-width: 300px;
+}
+
+.subtask-dialog-list {
+  padding: 0;
+  max-height: 240px;
+  overflow-y: auto;
 }
 
 .task-meta {
