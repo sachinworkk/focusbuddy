@@ -268,6 +268,11 @@ body.panel-visible {
 }
 
 .task-item {
+  border-radius: var(--fb-radius-sm);
+  font-size: var(--fb-font-size-sm);
+}
+
+.task-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -275,9 +280,95 @@ body.panel-visible {
   padding: var(--fb-space-2) var(--fb-space-3);
   border-radius: var(--fb-radius-sm);
   cursor: pointer;
-  font-size: var(--fb-font-size-sm);
   user-select: none;
   -webkit-user-select: none;
+}
+
+.subtask-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--fb-space-3) var(--fb-space-2) calc(var(--fb-space-3) + 1.4em);
+}
+
+.subtask-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--fb-space-2);
+  padding: 0.15em var(--fb-space-1);
+  border-radius: var(--fb-radius-sm);
+  font-size: var(--fb-font-size-xs);
+  color: var(--fb-text-faint);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.subtask-item:not(.subtask-item-new):hover {
+  background: var(--fb-surface-raised);
+}
+
+.subtask-item.selected {
+  background: var(--fb-accent-soft);
+  outline: 1px solid var(--fb-accent);
+}
+
+.subtask-item.completed .subtask-title {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.subtask-title {
+  min-width: 0;
+  flex: 1;
+  word-break: normal;
+  overflow-wrap: normal;
+  white-space: normal;
+}
+
+.subtask-complete-checkbox {
+  flex-shrink: 0;
+  margin: 0.15em 0 0;
+  cursor: pointer;
+  accent-color: var(--fb-accent);
+}
+
+.subtask-delete-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--fb-text-faint);
+  font-size: var(--fb-font-size-sm);
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.2em;
+  opacity: 0;
+}
+
+.subtask-item:hover .subtask-delete-btn {
+  opacity: 1;
+}
+
+.subtask-delete-btn:hover {
+  color: #e0655a;
+}
+
+.subtask-edit-input {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fb-font-size-xs);
+  color: var(--fb-text);
+  background: var(--fb-surface);
+  border: 1px solid var(--fb-border);
+  border-radius: var(--fb-radius-sm);
+  padding: 0.1em 0.3em;
+}
+
+.subtask-add-row {
+  padding: 0.15em 0;
+}
+
+.subtask-add-btn {
+  font-size: var(--fb-font-size-xs);
 }
 
 .task-section-title {
@@ -311,11 +402,11 @@ body.panel-visible {
   margin-top: 0;
 }
 
-.task-item:hover {
+.task-item:hover .task-row {
   background: var(--fb-surface-raised);
 }
 
-.task-item.selected {
+.task-item.selected .task-row {
   background: var(--fb-accent-soft);
   outline: 1px solid var(--fb-accent);
 }

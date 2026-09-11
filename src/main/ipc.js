@@ -146,6 +146,15 @@ function registerIpcHandlers() {
     return true;
   });
 
+  ipcMain.handle('ticktick:add-subtask', async (event, { projectId, parentTaskId, title }) => {
+    return ticktickApi.createSubtask(projectId, parentTaskId, title);
+  });
+
+  ipcMain.handle('ticktick:delete-subtask', async (event, { projectId, subtaskId }) => {
+    await ticktickApi.deleteSubtask(projectId, subtaskId);
+    return true;
+  });
+
   ipcMain.on('avatar:set-overdue-state', (event, overdue) => {
     const widget = getWidgetWindow();
     if (widget && !widget.isDestroyed()) {

@@ -38,9 +38,18 @@ async function getProjectOptions() {
   return cachedProjects;
 }
 
+function findSelectedTask() {
+  for (const task of currentTasks) {
+    if (task.id === selectedTaskId) return task;
+    const sub = task.subtasks?.find((s) => s.id === selectedTaskId);
+    if (sub) return { id: sub.id, projectId: sub.projectId, title: sub.title };
+  }
+  return null;
+}
+
 function updateIdleTaskLabel() {
   if (currentTimerState && currentTimerState.status !== 'idle') return;
-  const selected = currentTasks.find((t) => t.id === selectedTaskId);
+  const selected = findSelectedTask();
   timerTaskEl.textContent = selected ? selected.title : 'No task selected';
 }
 
@@ -505,11 +514,170 @@ function openEditTaskModal(task) {
   });
 }
 
+function createSubtaskItem(task, subtask) {
+  const subtaskItem = document.createElement('li');
+  subtaskItem.className = 'subtask-item';
+  if (subtask.completed) subtaskItem.classList.add('completed');
+  if (subtask.id === selectedTaskId) subtaskItem.classList.add('selected');
+
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.className = 'subtask-complete-checkbox';
+  checkbox.checked = subtask.completed;
+  checkbox.addEventListener('click', (event) => event.stopPropagation());
+  checkbox.addEventListener('change', async () => {
+    checkbox.disabled = true;
+    try {
+      await window.focusbuddy.ticktick.completeTask(subtask.projectId, subtask.id);
+      window.focusbuddySounds.celebrate();
+      if (subtask.id === selectedTaskId) selectedTaskId = null;
+      task.subtasks = task.subtasks.filter((s) => s.id !== subtask.id);
+      renderTasks(currentTasks);
+    } catch (err) {
+      checkbox.checked = false;
+      checkbox.disabled = false;
+      tasksStatusEl.hidden = false;
+      tasksStatusEl.textContent = `Couldn't mark "${subtask.title}" complete: ${err.message}`;
+    }
+  });
+  subtaskItem.appendChild(checkbox);
+
+  const subtaskTitle = document.createElement('span');
+  subtaskTitle.className = 'subtask-title';
+  subtaskTitle.textContent = subtask.title;
+  subtaskItem.appendChild(subtaskTitle);
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.type = 'button';
+  deleteBtn.className = 'subtask-delete-btn';
+  deleteBtn.textContent = '×';
+  deleteBtn.title = 'Delete subtask';
+  deleteBtn.addEventListener('click', async (event) => {
+    event.stopPropagation();
+    deleteBtn.disabled = true;
+    try {
+      await window.focusbuddy.ticktick.deleteSubtask(subtask.projectId, subtask.id);
+      if (subtask.id === selectedTaskId) selectedTaskId = null;
+      loadTasks();
+    } catch (err) {
+      deleteBtn.disabled = false;
+      tasksStatusEl.hidden = false;
+      tasksStatusEl.textContent = `Couldn't delete subtask: ${err.message}`;
+    }
+  });
+  subtaskItem.appendChild(deleteBtn);
+
+  subtaskItem.addEventListener('click', () => {
+    window.focusbuddySounds.select();
+    selectedTaskId = subtask.id === selectedTaskId ? null : subtask.id;
+    renderTasks(currentTasks);
+    updateIdleTaskLabel();
+  });
+
+  subtaskItem.addEventListener('dblclick', (event) => {
+    event.stopPropagation();
+    startEditSubtask(subtask, subtaskItem, subtaskTitle);
+  });
+
+  return subtaskItem;
+}
+
+function startEditSubtask(subtask, subtaskItem, subtaskTitle) {
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'subtask-edit-input';
+  input.value = subtask.title;
+  subtaskItem.replaceChild(input, subtaskTitle);
+  input.focus();
+  input.select();
+
+  let settled = false;
+  const commit = async () => {
+    if (settled) return;
+    const value = input.value.trim();
+    if (!value || value === subtask.title) {
+      settled = true;
+      subtaskItem.replaceChild(subtaskTitle, input);
+      return;
+    }
+    settled = true;
+    input.disabled = true;
+    try {
+      await window.focusbuddy.ticktick.updateTask(subtask.id, subtask.projectId, { title: value });
+      loadTasks();
+    } catch (err) {
+      tasksStatusEl.hidden = false;
+      tasksStatusEl.textContent = `Couldn't update subtask: ${err.message}`;
+      subtaskItem.replaceChild(subtaskTitle, input);
+    }
+  };
+  const cancel = () => {
+    if (settled) return;
+    settled = true;
+    subtaskItem.replaceChild(subtaskTitle, input);
+  };
+
+  input.addEventListener('click', (event) => event.stopPropagation());
+  input.addEventListener('dblclick', (event) => event.stopPropagation());
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') commit();
+    if (event.key === 'Escape') cancel();
+  });
+  input.addEventListener('blur', commit);
+}
+
+function startAddSubtask(task, subtaskList, beforeEl) {
+  const li = document.createElement('li');
+  li.className = 'subtask-item subtask-item-new';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'subtask-edit-input';
+  input.placeholder = 'Subtask title';
+  li.appendChild(input);
+  subtaskList.insertBefore(li, beforeEl);
+  input.focus();
+
+  let settled = false;
+  const commit = async () => {
+    if (settled) return;
+    const value = input.value.trim();
+    if (!value) {
+      settled = true;
+      li.remove();
+      return;
+    }
+    settled = true;
+    input.disabled = true;
+    try {
+      await window.focusbuddy.ticktick.addSubtask(task.projectId, task.id, value);
+      loadTasks();
+    } catch (err) {
+      tasksStatusEl.hidden = false;
+      tasksStatusEl.textContent = `Couldn't add subtask: ${err.message}`;
+      li.remove();
+    }
+  };
+
+  input.addEventListener('click', (event) => event.stopPropagation());
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') commit();
+    if (event.key === 'Escape') {
+      settled = true;
+      li.remove();
+    }
+  });
+  input.addEventListener('blur', commit);
+}
+
 function createTaskItem(task, bucket) {
   const item = document.createElement('li');
   item.className = 'task-item';
   item.dataset.taskId = task.id;
   if (task.id === selectedTaskId) item.classList.add('selected');
+
+  const row = document.createElement('div');
+  row.className = 'task-row';
 
   const complete = document.createElement('input');
   complete.type = 'checkbox';
@@ -556,18 +724,40 @@ function createTaskItem(task, bucket) {
     meta.appendChild(createDueControl(task, bucket));
   }
 
-  item.appendChild(complete);
-  item.appendChild(title);
-  item.appendChild(meta);
+  row.appendChild(complete);
+  row.appendChild(title);
+  row.appendChild(meta);
+  item.appendChild(row);
 
-  item.addEventListener('click', () => {
+  const subtaskList = document.createElement('ul');
+  subtaskList.className = 'subtask-list';
+  for (const subtask of task.subtasks || []) {
+    subtaskList.appendChild(createSubtaskItem(task, subtask));
+  }
+
+  const addSubtaskRow = document.createElement('li');
+  addSubtaskRow.className = 'subtask-add-row';
+  const addSubtaskBtn = document.createElement('button');
+  addSubtaskBtn.type = 'button';
+  addSubtaskBtn.className = 'link-btn subtask-add-btn';
+  addSubtaskBtn.textContent = '+ Add subtask';
+  addSubtaskBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    startAddSubtask(task, subtaskList, addSubtaskRow);
+  });
+  addSubtaskRow.appendChild(addSubtaskBtn);
+  subtaskList.appendChild(addSubtaskRow);
+
+  item.appendChild(subtaskList);
+
+  row.addEventListener('click', () => {
     window.focusbuddySounds.select();
     selectedTaskId = task.id === selectedTaskId ? null : task.id;
     renderTasks(currentTasks);
     updateIdleTaskLabel();
   });
 
-  item.addEventListener('dblclick', (event) => {
+  row.addEventListener('dblclick', (event) => {
     event.stopPropagation();
     openEditTaskModal(task);
   });
@@ -808,7 +998,7 @@ function renderSessionCompleted({ entry, ticktickSynced, ticktickError, focusSyn
 timerStartBtn.addEventListener('click', async () => {
   window.focusbuddySounds.start();
   const minutes = Number(timerMinutesInput.value) || 25;
-  const task = currentTasks.find((t) => t.id === selectedTaskId) || null;
+  const task = findSelectedTask();
   sessionStatusEl.hidden = true;
   timerStartBtn.disabled = true;
   try {
