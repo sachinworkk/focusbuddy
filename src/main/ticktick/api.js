@@ -1,5 +1,6 @@
 const config = require('../../config');
 const { loadTokens } = require('./token-store');
+const subtaskLinks = require('./subtask-links');
 
 async function authedFetch(path, options = {}) {
   const tokens = loadTokens();
@@ -45,18 +46,47 @@ async function getAllTasks() {
     )
   );
 
-  return perProject.flatMap(({ project, tasks }) =>
-    tasks.map((task) => ({
-      id: task.id,
-      projectId: project.id,
-      projectName: project.name,
-      title: task.title,
-      dueDate: task.dueDate || null,
-      startDate: task.startDate || null,
-      isAllDay: task.isAllDay || false,
-      priority: task.priority,
-    }))
-  );
+  const links = subtaskLinks.getLinks();
+
+  return perProject.flatMap(({ project, tasks }) => {
+    // Subtasks are ordinary tasks linked via `parentId`/`childIds`, shown
+    // nested under their parent in TickTick's own UI (e.g. "HOML : CNN
+    // chapter" under "Daily Learning Block"). TickTick's own `parentId` is
+    // trusted first; the local link file (see subtask-links.js) is a
+    // fallback for when we created the link ourselves and TickTick's Open
+    // API silently didn't persist it. A link is only honored if its parent
+    // id resolves to a task actually present in this fetch, so a stale
+    // link (parent deleted) doesn't make the child vanish — it just falls
+    // back to showing up as a normal top-level task.
+    const byId = new Map(tasks.map((task) => [task.id, task]));
+    const parentIdOf = (task) => {
+      if (task.parentId && byId.has(task.parentId)) return task.parentId;
+      const linked = links[task.id];
+      return linked && byId.has(linked) ? linked : null;
+    };
+    const isChild = (task) => parentIdOf(task) != null;
+
+    return tasks
+      .filter((task) => !isChild(task))
+      .map((task) => ({
+        id: task.id,
+        projectId: project.id,
+        projectName: project.name,
+        title: task.title,
+        dueDate: task.dueDate || null,
+        startDate: task.startDate || null,
+        isAllDay: task.isAllDay || false,
+        priority: task.priority,
+        subtasks: tasks
+          .filter((t) => parentIdOf(t) === task.id)
+          .map((child) => ({
+            id: child.id,
+            projectId: project.id,
+            title: child.title,
+            completed: child.status === 2,
+          })),
+      }));
+  });
 }
 
 function completeTask(projectId, taskId) {
@@ -125,6 +155,27 @@ async function deleteTask(projectId, taskId) {
   return authedFetch(`/project/${resolvedProjectId}/task/${taskId}`, { method: 'DELETE' });
 }
 
+// Subtasks are just ordinary tasks. We attempt to set `parentId` on create
+// so TickTick's own apps nest it too if the (undocumented) field is
+// actually honored; the local link file is the source of truth regardless
+// (see getAllTasks / subtask-links.js). Editing a subtask's title and
+// completing it reuse updateTask/completeTask below unchanged.
+async function createSubtask(projectId, parentTaskId, title) {
+  const resolvedProjectId = await resolveProjectId(projectId);
+  const created = await authedFetch('/task', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, projectId: resolvedProjectId, parentId: parentTaskId }),
+  });
+  subtaskLinks.linkSubtask(created.id, parentTaskId);
+  return created;
+}
+
+async function deleteSubtask(projectId, subtaskId) {
+  await deleteTask(projectId, subtaskId);
+  subtaskLinks.unlinkSubtask(subtaskId);
+}
+
 function updateTaskDueDate(projectId, taskId, dueDate, isAllDay, startDate = dueDate) {
   return authedFetch(`/task/${taskId}`, {
     method: 'POST',
@@ -163,4 +214,6 @@ module.exports = {
   createTask,
   updateTask,
   deleteTask,
+  createSubtask,
+  deleteSubtask,
 };

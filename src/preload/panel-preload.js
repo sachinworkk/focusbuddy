@@ -28,6 +28,10 @@ contextBridge.exposeInMainWorld('focusbuddy', {
     updateTask: (taskId, currentProjectId, { title, projectId } = {}) =>
       ipcRenderer.invoke('ticktick:update-task', { taskId, currentProjectId, title, projectId }),
     deleteTask: (projectId, taskId) => ipcRenderer.invoke('ticktick:delete-task', { projectId, taskId }),
+    addSubtask: (projectId, parentTaskId, title) =>
+      ipcRenderer.invoke('ticktick:add-subtask', { projectId, parentTaskId, title }),
+    deleteSubtask: (projectId, subtaskId) =>
+      ipcRenderer.invoke('ticktick:delete-subtask', { projectId, subtaskId }),
   },
   avatar: {
     setOverdueState: (overdue) => ipcRenderer.send('avatar:set-overdue-state', overdue),
